@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import sigiv.Backend.sigiv.Backend.entity.Empresa;
 
-public interface EmpresaRepository extends JpaRepository<sigiv.Backend.sigiv.Backend.entity.Empresa, Long>{
+public interface EmpresaRepository extends JpaRepository<Empresa, Long>{
     
   List<Empresa> findByEstado(Empresa.Estado estado);
 }

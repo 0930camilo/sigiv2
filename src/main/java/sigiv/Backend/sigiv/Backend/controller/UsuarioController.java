@@ -1,96 +1,88 @@
 package sigiv.Backend.sigiv.Backend.controller;
 
 import java.util.List;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import lombok.RequiredArgsConstructor;
+import sigiv.Backend.sigiv.Backend.dto.user.UsuarioRequestDto;
+import sigiv.Backend.sigiv.Backend.dto.user.UsuarioResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Usuario;
-import sigiv.Backend.sigiv.Backend.repository.UsuarioRepository;
+import sigiv.Backend.sigiv.Backend.services.UsuarioService;
+import sigiv.Backend.sigiv.Backend.util.ApiResponse;
 
 @RestController
 @RequestMapping("/usuarios")
+@RequiredArgsConstructor
 public class UsuarioController {
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    private final UsuarioService usuarioService;
 
-    // Obtener todos los usuarios
-    @GetMapping
-    public ResponseEntity<List<Usuario>> obtenerTodos() {
-        return ResponseEntity.ok(usuarioRepository.findAll());
+    @PostMapping("/crear-usuarios")
+    public ResponseEntity<ApiResponse<UsuarioResponseDto>> crear(@RequestBody UsuarioRequestDto dto) {
+        UsuarioResponseDto created = usuarioService.crearUsuario(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                new ApiResponse<>(true, HttpStatus.CREATED.value(),
+                        "Usuario creado correctamente", created)
+        );
     }
 
-    // Obtener usuarios activos
-    @GetMapping("/activos")
-    public ResponseEntity<List<Usuario>> obtenerActivos() {
-        return ResponseEntity.ok(usuarioRepository.findByEstado(Usuario.Estado.Activo));
-    }
-
-    // Obtener usuarios inactivos
-    @GetMapping("/inactivos")
-    public ResponseEntity<List<Usuario>> obtenerInactivos() {
-        return ResponseEntity.ok(usuarioRepository.findByEstado(Usuario.Estado.Inactivo));
-    }
-
-    // Obtener usuario por ID
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> obtenerPorId(@PathVariable Long id) {
-        return usuarioRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ApiResponse<UsuarioResponseDto>> obtenerPorId(@PathVariable Long id) {
+        UsuarioResponseDto usuario = usuarioService.obtenerPorId(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Usuario encontrado", usuario)
+        );
     }
 
-    // Guardar nuevo usuario
-    @PostMapping
-    public ResponseEntity<Usuario> guardar(@RequestBody Usuario nuevoUsuario) {
-        Usuario guardado = usuarioRepository.save(nuevoUsuario);
-        return ResponseEntity.ok(guardado);
+    @GetMapping("/list-users")
+    public ResponseEntity<ApiResponse<List<UsuarioResponseDto>>> listar() {
+        List<UsuarioResponseDto> usuarios = usuarioService.listarUsuarios();
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Todos los usuarios listados", usuarios)
+        );
     }
 
-    // Actualizar usuario existente
-    @PutMapping("/{id}")
-    public ResponseEntity<Usuario> actualizar(
+    @GetMapping("/list-user-status")
+    public ResponseEntity<ApiResponse<List<UsuarioResponseDto>>> listarPorEstado(
+            @RequestParam(required = false) Usuario.Estado estado) {
+
+        List<UsuarioResponseDto> usuarios;
+        String message;
+
+        if (estado != null) {
+            usuarios = usuarioService.listarPorEstado(estado);
+            message = "Usuarios listados por estado: " + estado;
+        } else {
+            usuarios = usuarioService.listarUsuarios();
+            message = "Todos los usuarios listados";
+        }
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(), message, usuarios)
+        );
+    }
+
+    @PutMapping("/update-user/{id}")
+    public ResponseEntity<ApiResponse<UsuarioResponseDto>> actualizar(
             @PathVariable Long id,
-            @RequestBody Usuario usuarioActualizado
-    ) {
-        return usuarioRepository.findById(id)
-                .map(usuario -> {
-                    usuario.setNombres(usuarioActualizado.getNombres());
-                    usuario.setClave(usuarioActualizado.getClave());
-                    usuario.setTelefono(usuarioActualizado.getTelefono());
-                    usuario.setDireccion(usuarioActualizado.getDireccion());
-                    usuario.setEstado(usuarioActualizado.getEstado());
-                    Usuario actualizado = usuarioRepository.save(usuario);
-                    return ResponseEntity.ok(actualizado);
-                }).orElse(ResponseEntity.notFound().build());
+            @RequestBody UsuarioRequestDto dto) {
+        UsuarioResponseDto actualizado = usuarioService.actualizarUsuario(id, dto);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Usuario actualizado correctamente", actualizado)
+        );
     }
 
-    // Eliminar usuario físicamente
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        if (usuarioRepository.existsById(id)) {
-            usuarioRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    // Eliminar usuario por estado (eliminación lógica)
-    @PutMapping("/eliminar/{id}")
-    public ResponseEntity<Usuario> eliminarLogicamente(@PathVariable Long id) {
-        Optional<Usuario> usuarioOptional = usuarioRepository.findById(id);
-
-        if (usuarioOptional.isPresent()) {
-            Usuario usuario = usuarioOptional.get();
-            usuario.setEstado(Usuario.Estado.Inactivo);
-            Usuario actualizado = usuarioRepository.save(usuario);
-            return ResponseEntity.ok(actualizado);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    @DeleteMapping("/delete-user/{id}")
+    public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
+        usuarioService.eliminarUsuario(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Usuario eliminado correctamente", null)
+        );
     }
 }

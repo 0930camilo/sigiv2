@@ -53,10 +53,5 @@ private Proveedor proveedor;
 @ManyToOne
 @JoinColumn(name = "categoria_idcategoria")
 private Categoria categoria;
-
-
-
-
-    
 }
 
