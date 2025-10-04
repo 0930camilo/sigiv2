@@ -27,20 +27,24 @@ public class Categoria {
 
     private String nombre;
 
-    @Enumerated(EnumType.STRING)
+    
+   @Enumerated(EnumType.STRING)
     private Estado estado;
 
-   
 
+     // Enum declarado fuera de los atributos
     public enum Estado {
-        Activo, Inactivo
+        Activo,
+        Inactivo
     }
 
     
   @ManyToOne
-@JoinColumn(name = "usuario_idusuario")
-@JsonBackReference("usuario-categorias")
-private Usuario usuario;
+@JoinColumn(name = "empresa_idempresa")
+@JsonBackReference("empresa-categorias")
+private Empresa empresa;
+
+
 
  @OneToMany(mappedBy = "categoria", cascade = CascadeType.ALL)
 @JsonIgnore

@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import sigiv.Backend.sigiv.Backend.entity.Categoria;
 
 
-public interface CategoriaRepository  extends JpaRepository<sigiv.Backend.sigiv.Backend.entity.Categoria, Long> {
 
-    List<Categoria> findByEstado(Categoria.Estado estado);
+public interface CategoriaRepository  extends JpaRepository<Categoria, Long> {
+   List<Categoria> findByEstado(Categoria.Estado estado);
 }

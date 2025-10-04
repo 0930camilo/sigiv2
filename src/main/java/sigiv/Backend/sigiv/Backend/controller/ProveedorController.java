@@ -1,99 +1,99 @@
 package sigiv.Backend.sigiv.Backend.controller;
 
 import java.util.List;
-
-
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import sigiv.Backend.sigiv.Backend.entity.Producto;
+import lombok.RequiredArgsConstructor;
+import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorRequestDto;
+import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Proveedor;
-import sigiv.Backend.sigiv.Backend.repository.ProveedorRepository;
+import sigiv.Backend.sigiv.Backend.services.ProveedorService;
+import sigiv.Backend.sigiv.Backend.util.ApiResponse;
 
 @RestController
 @RequestMapping("/proveedores")
+@RequiredArgsConstructor
 public class ProveedorController {
 
-    @Autowired
-    private ProveedorRepository proveedorRepository;
+    private final ProveedorService proveedorService;
 
-    // Obtener todos los proveedores
-    @GetMapping
-    public ResponseEntity<List<Proveedor>> obtenerTodos() {
-        return ResponseEntity.ok(proveedorRepository.findAll());
+    @PostMapping("/crear-proveedor")
+    public ResponseEntity<ApiResponse<ProveedorResponseDto>> crear(@RequestBody ProveedorRequestDto dto) {
+        ProveedorResponseDto created = proveedorService.crearProveedor(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                new ApiResponse<>(true, HttpStatus.CREATED.value(),
+                        "Proveedor creado correctamente", created)
+        );
     }
 
-    // Obtener proveedores activos
-    @GetMapping("/activos")
-    public ResponseEntity<List<Proveedor>> obtenerActivos() {
-        return ResponseEntity.ok(proveedorRepository.findByEstado(Proveedor.Estado.Activo));
-    }
-
-    // Obtener proveedores inactivos
-    @GetMapping("/inactivos")
-    public ResponseEntity<List<Proveedor>> obtenerInactivos() {
-        return ResponseEntity.ok(proveedorRepository.findByEstado(Proveedor.Estado.Inactivo));
-    }
-
-    // Obtener proveedor por ID
     @GetMapping("/{id}")
-    public ResponseEntity<Proveedor> obtenerPorId(@PathVariable Long id) {
-        return proveedorRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ApiResponse<ProveedorResponseDto>> obtenerPorId(@PathVariable Long id) {
+        ProveedorResponseDto proveedor = proveedorService.obtenerPorId(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Proveedor encontrado", proveedor)
+        );
     }
 
-    // Guardar nuevo proveedor
-    @PostMapping
-    public ResponseEntity<Proveedor> guardar(@RequestBody Proveedor nuevoProveedor) {
-        Proveedor guardado = proveedorRepository.save(nuevoProveedor);
-        return ResponseEntity.ok(guardado);
+    @GetMapping("/list-proveedores")
+    public ResponseEntity<ApiResponse<List<ProveedorResponseDto>>> listar() {
+        List<ProveedorResponseDto> proveedores = proveedorService.listarProveedores();
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Todos los proveedores listados", proveedores)
+        );
     }
 
-    // Actualizar proveedor
-    @PutMapping("/{id}")
-    public ResponseEntity<Proveedor> actualizar(@PathVariable Long id, @RequestBody Proveedor proveedorActualizado) {
-        return proveedorRepository.findById(id)
-                .map(proveedor -> {
-                    proveedor.setNombre(proveedorActualizado.getNombre());
-                    proveedor.setTelefono(proveedorActualizado.getTelefono());
-                    proveedor.setEstado(proveedorActualizado.getEstado());
-                    proveedor.setUsuario(proveedorActualizado.getUsuario());
-                    Proveedor actualizado = proveedorRepository.save(proveedor);
-                    return ResponseEntity.ok(actualizado);
-                })
-                .orElse(ResponseEntity.notFound().build());
-    }
+    @GetMapping("/list-proveedor-status")
+    public ResponseEntity<ApiResponse<List<ProveedorResponseDto>>> listarPorEstado(
+            @RequestParam(required = false) Proveedor.Estado estado) {
 
-    // Eliminar físicamente un proveedor
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        if (proveedorRepository.existsById(id)) {
-            proveedorRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
+        List<ProveedorResponseDto> proveedores;
+        String message;
+
+        if (estado != null) {
+            proveedores = proveedorService.listarPorEstado(estado);
+            message = "Proveedores listados por estado: " + estado;
         } else {
-            return ResponseEntity.notFound().build();
+            proveedores = proveedorService.listarProveedores();
+            message = "Todos los proveedores listados";
         }
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(), message, proveedores)
+        );
     }
 
-    // Eliminación lógica (estado = Inactivo)
-    @PutMapping("/eliminar/{id}")
-    public ResponseEntity<Proveedor> eliminarLogicamente(@PathVariable Long id) {
-        return proveedorRepository.findById(id)
-                .map(proveedor -> {
-                    proveedor.setEstado(Proveedor.Estado.Inactivo);
-                    Proveedor actualizado = proveedorRepository.save(proveedor);
-                    return ResponseEntity.ok(actualizado);
-                })
-                .orElse(ResponseEntity.notFound().build());
+    @PutMapping("/update-proveedor/{id}")
+    public ResponseEntity<ApiResponse<ProveedorResponseDto>> actualizar(
+            @PathVariable Long id,
+            @RequestBody ProveedorRequestDto dto) {
+        ProveedorResponseDto actualizado = proveedorService.actualizarProveedor(id, dto);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Proveedor actualizado correctamente", actualizado)
+        );
     }
 
-    // Obtener todos los productos de un proveedor
-    @GetMapping("/{id}/productos")
-    public ResponseEntity<List<Producto>> obtenerProductosPorProveedor(@PathVariable Long id) {
-        return proveedorRepository.findById(id)
-                .map(proveedor -> ResponseEntity.ok(proveedor.getProductos()))
-                .orElse(ResponseEntity.notFound().build());
+    @DeleteMapping("/delete-proveedor/{id}")
+    public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
+        proveedorService.eliminarProveedor(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Proveedor eliminado correctamente", null)
+        );
     }
+
+    @PutMapping("/cambiar-estado/{id}")
+    public ResponseEntity<ApiResponse<ProveedorResponseDto>> cambiarEstado(@PathVariable Long id) {
+        ProveedorResponseDto actualizado = proveedorService.cambiarEstado(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Estado del proveedor actualizado automáticamente", actualizado)
+        );
+}
+
+
 }

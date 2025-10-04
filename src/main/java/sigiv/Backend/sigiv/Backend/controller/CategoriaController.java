@@ -1,100 +1,99 @@
 package sigiv.Backend.sigiv.Backend.controller;
 
 import java.util.List;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import lombok.RequiredArgsConstructor;
+import sigiv.Backend.sigiv.Backend.dto.catego.CategoriaRequestDto;
+import sigiv.Backend.sigiv.Backend.dto.catego.CategoriaResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Categoria;
-import sigiv.Backend.sigiv.Backend.entity.Producto;
-import sigiv.Backend.sigiv.Backend.repository.CategoriaRepository;
+import sigiv.Backend.sigiv.Backend.services.CategoriaService;
+import sigiv.Backend.sigiv.Backend.util.ApiResponse;
 
 @RestController
-@RequestMapping("/categoria")
+@RequestMapping("/categorias")
+@RequiredArgsConstructor
 public class CategoriaController {
 
-    @Autowired
-    private CategoriaRepository categoriaRepository;
+    private final CategoriaService categoriaService;
 
-    // Obtener todas las categorías
-    @GetMapping("/mostrar")
-    public List<Categoria> obtenerTodas() {
-        return categoriaRepository.findAll();
+    @PostMapping("/crear-categoria")
+    public ResponseEntity<ApiResponse<CategoriaResponseDto>> crear(@RequestBody CategoriaRequestDto dto) {
+        CategoriaResponseDto created = categoriaService.crearCategoria(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                new ApiResponse<>(true, HttpStatus.CREATED.value(),
+                        "Categoria creada correctamente", created)
+        );
     }
 
-    // Obtener categorías activas
-    @GetMapping("/activas")
-    public List<Categoria> obtenerActivas() {
-        return categoriaRepository.findByEstado(Categoria.Estado.Activo);
-    }
-
-    // Obtener categorías inactivas
-    @GetMapping("/inactivas")
-    public List<Categoria> obtenerInactivas() {
-        return categoriaRepository.findByEstado(Categoria.Estado.Inactivo);
-    }
-
-    // Obtener categoría por ID
     @GetMapping("/{id}")
-    public ResponseEntity<Categoria> obtenerPorId(@PathVariable Long id) {
-        return categoriaRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ApiResponse<CategoriaResponseDto>> obtenerPorId(@PathVariable Long id) {
+        CategoriaResponseDto categoria = categoriaService.obtenerPorId(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Categoria encontrada", categoria)
+        );
     }
 
-    // Guardar nueva categoría
-    @PostMapping("/guardar")
-    public Categoria guardar(@RequestBody Categoria nuevaCategoria) {
-        return categoriaRepository.save(nuevaCategoria);
+    @GetMapping("/list-categorias")
+    public ResponseEntity<ApiResponse<List<CategoriaResponseDto>>> listar() {
+        List<CategoriaResponseDto> categorias = categoriaService.listarCategorias();
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Todas las categorias listadas", categorias)
+        );
     }
 
-    // Actualizar categoría existente
-    @PutMapping("/actualizar/{id}")
-    public ResponseEntity<Categoria> actualizar(@PathVariable Long id, @RequestBody Categoria categoriaActualizada) {
-        return categoriaRepository.findById(id)
-                .map(categoria -> {
-                    categoria.setNombre(categoriaActualizada.getNombre());
-                    categoria.setEstado(categoriaActualizada.getEstado());
-                    categoria.setUsuario(categoriaActualizada.getUsuario());
-                    Categoria actualizada = categoriaRepository.save(categoria);
-                    return ResponseEntity.ok(actualizada);
-                }).orElse(ResponseEntity.notFound().build());
-    }
+    @GetMapping("/list-categoria-status")
+    public ResponseEntity<ApiResponse<List<CategoriaResponseDto>>> listarPorEstado(
+            @RequestParam(required = false) Categoria.Estado estado) {
 
-    // Eliminar categoría (físicamente)
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        if (categoriaRepository.existsById(id)) {
-            categoriaRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
+        List<CategoriaResponseDto> categorias;
+        String message;
+
+        if (estado != null) {
+            categorias = categoriaService.listarPorEstado(estado);
+            message = "Categorias listadas por estado: " + estado;
         } else {
-            return ResponseEntity.notFound().build();
+            categorias = categoriaService.listarCategorias();
+            message = "Todas las categorias listadas";
         }
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(), message, categorias)
+        );
     }
 
-    // Eliminación lógica (cambiar estado a Inactivo)
-    @PutMapping("/eliminar/{id}")
-    public ResponseEntity<Categoria> eliminarLogicamente(@PathVariable Long id) {
-        return categoriaRepository.findById(id)
-                .map(categoria -> {
-                    categoria.setEstado(Categoria.Estado.Inactivo);
-                    Categoria actualizada = categoriaRepository.save(categoria);
-                    return ResponseEntity.ok(actualizada);
-                }).orElse(ResponseEntity.notFound().build());
+    @PutMapping("/update-categoria/{id}")
+    public ResponseEntity<ApiResponse<CategoriaResponseDto>> actualizar(
+            @PathVariable Long id,
+            @RequestBody CategoriaRequestDto dto) {
+        CategoriaResponseDto actualizado = categoriaService.actualizarCategoria(id, dto);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Categoria actualizada correctamente", actualizado)
+        );
     }
 
-      @GetMapping("/{id}/productos")
-public ResponseEntity<List<Producto>> obtenerProductosPorCategoria(@PathVariable Long id) {
-    Optional<Categoria> categoriaOptional = categoriaRepository.findById(id);
-
-    if (categoriaOptional.isPresent()) {
-        Categoria categoria = categoriaOptional.get();
-        List<Producto> productos = categoria.getProductos();
-        return ResponseEntity.ok(productos);
-    } else {
-        return ResponseEntity.notFound().build();
+    @DeleteMapping("/delete-categoria/{id}")
+    public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
+        categoriaService.eliminarCategoria(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Categoria eliminada correctamente", null)
+        );
     }
+
+    @PutMapping("/cambiar-estado/{id}")
+    public ResponseEntity<ApiResponse<CategoriaResponseDto>> cambiarEstado(@PathVariable Long id) {
+        CategoriaResponseDto actualizado = categoriaService.cambiarEstado(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Estado de la categoria actualizado automáticamente", actualizado)
+        );
 }
+
+
 }

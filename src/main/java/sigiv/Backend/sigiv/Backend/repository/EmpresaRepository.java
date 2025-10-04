@@ -10,3 +10,4 @@ public interface EmpresaRepository extends JpaRepository<Empresa, Long>{
     
   List<Empresa> findByEstado(Empresa.Estado estado);
 }
+

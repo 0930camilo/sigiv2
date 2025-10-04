@@ -54,7 +54,7 @@ public ResponseEntity<Nomina> guardar(@RequestBody Nomina nuevaNomina) {
                     nomina.setDescripcion(nominaActualizada.getDescripcion());
                     nomina.setFechaInicio(nominaActualizada.getFechaInicio());
                     nomina.setFechaFin(nominaActualizada.getFechaFin());
-                    nomina.setUsuario(nominaActualizada.getUsuario());
+                    nomina.setEmpresa(nominaActualizada.getEmpresa());
 
                     Nomina actualizada = nominaRepository.save(nomina);
 

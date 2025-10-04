@@ -61,7 +61,7 @@ public class PersonaController {
                     persona.setFechaNacimiento(personaActualizada.getFechaNacimiento());
                     persona.setFechaIngreso(personaActualizada.getFechaIngreso());
                     persona.setEstado(personaActualizada.getEstado());
-                    persona.setUsuario(personaActualizada.getUsuario());
+                    persona.setEmpresa(personaActualizada.getEmpresa());
                     Persona actualizada = personaRepository.save(persona);
                     return ResponseEntity.ok(actualizada);
                 }).orElse(ResponseEntity.notFound().build());

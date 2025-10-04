@@ -39,8 +39,8 @@ public class Persona {
     }
 
     @ManyToOne
-@JoinColumn(name = "usuario_idusuario")
-@JsonBackReference("usuario-personas")
-private Usuario usuario;
+@JoinColumn(name = "empresa_idempresa")
+@JsonBackReference("empresa-personas")
+private Empresa empresa;
 
 }

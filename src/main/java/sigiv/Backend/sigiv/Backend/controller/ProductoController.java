@@ -1,97 +1,100 @@
 package sigiv.Backend.sigiv.Backend.controller;
 
 import java.util.List;
-
-
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import sigiv.Backend.sigiv.Backend.entity.Producto;
+import lombok.RequiredArgsConstructor;
+import sigiv.Backend.sigiv.Backend.dto.produc.ProductoRequestDto;
+import sigiv.Backend.sigiv.Backend.dto.produc.ProductoResponseDto;
 
-import sigiv.Backend.sigiv.Backend.repository.ProductoRepository;
+import sigiv.Backend.sigiv.Backend.entity.Producto;
+import sigiv.Backend.sigiv.Backend.services.ProductoService;
+import sigiv.Backend.sigiv.Backend.util.ApiResponse;
 
 @RestController
-@RequestMapping("/producto")
+@RequestMapping("/productos")
+@RequiredArgsConstructor
 public class ProductoController {
 
-    @Autowired
-    private ProductoRepository productoRepository;
+    private final ProductoService productoService;
 
-    // Obtener todos los productos
-    @GetMapping("/mostrar")
-    public List<Producto> obtenerTodos() {
-        return productoRepository.findAll();
+    @PostMapping("/crear-producto")
+    public ResponseEntity<ApiResponse<ProductoResponseDto>> crear(@RequestBody ProductoRequestDto dto) {
+        ProductoResponseDto created = productoService.crearProducto(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                new ApiResponse<>(true, HttpStatus.CREATED.value(),
+                        "Producto creado correctamente", created)
+        );
     }
 
-    // Obtener productos activos
-    @GetMapping("/activos")
-    public List<Producto> obtenerActivos() {
-        return productoRepository.findByEstado(Producto.Estado.Activo);
-    }
-
-    // Obtener productos inactivos
-    @GetMapping("/inactivos")
-    public List<Producto> obtenerInactivos() {
-        return productoRepository.findByEstado(Producto.Estado.Inactivo);
-    }
-
-    // Buscar producto por ID
     @GetMapping("/{id}")
-    public ResponseEntity<Producto> obtenerPorId(@PathVariable Long id) {
-        return productoRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ApiResponse<ProductoResponseDto>> obtenerPorId(@PathVariable Long id) {
+        ProductoResponseDto producto = productoService.obtenerPorId(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Producto encontrado", producto)
+        );
     }
 
-    // Guardar nuevo producto
-    @PostMapping("/guardar")
-    public Producto guardar(@RequestBody Producto nuevoProducto) {
-        return productoRepository.save(nuevoProducto);
+    @GetMapping("/list-productos")
+    public ResponseEntity<ApiResponse<List<ProductoResponseDto>>> listar() {
+        List<ProductoResponseDto> productos = productoService.listarProductos();
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Todos los productos listados", productos)
+        );
     }
 
-    // Actualizar producto por ID
-    @PutMapping("/actualizar/{id}")
-    public ResponseEntity<Producto> actualizar(@PathVariable Long id, @RequestBody Producto productoActualizado) {
-        return productoRepository.findById(id)
-                .map(producto -> {
-                    producto.setNombre(productoActualizado.getNombre());
-                    producto.setDescripcion(productoActualizado.getDescripcion());
-                    producto.setCantidad(productoActualizado.getCantidad());
-                    producto.setPrecio(productoActualizado.getPrecio());
-                    producto.setPrecioCompra(productoActualizado.getPrecioCompra());
-                    producto.setFecha(productoActualizado.getFecha());
-                    producto.setEstado(productoActualizado.getEstado());
-                    producto.setUsuario(productoActualizado.getUsuario());
-                    producto.setCategoria(productoActualizado.getCategoria());
-                    producto.setProveedor(productoActualizado.getProveedor());
-                    Producto actualizado = productoRepository.save(producto);
-                    return ResponseEntity.ok(actualizado);
-                }).orElse(ResponseEntity.notFound().build());
-    }
+    @GetMapping("/list-producto-status")
+    public ResponseEntity<ApiResponse<List<ProductoResponseDto>>> listarPorEstado(
+            @RequestParam(required = false) Producto.Estado estado) {
 
-    // Eliminar (físicamente) producto por ID
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        if (productoRepository.existsById(id)) {
-            productoRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
+        List<ProductoResponseDto> productos;
+        String message;
+
+        if (estado != null) {
+            productos = productoService.listarPorEstado(estado);
+            message = "Productos listados por estado: " + estado;
         } else {
-            return ResponseEntity.notFound().build();
+            productos = productoService.listarProductos();
+            message = "Todos los productos listados";
         }
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(), message, productos)
+        );
     }
 
-    // Eliminar lógicamente (estado = Inactivo)
-    @PutMapping("/eliminar/{id}")
-    public ResponseEntity<Producto> eliminarLogico(@PathVariable Long id) {
-        return productoRepository.findById(id)
-                .map(producto -> {
-                    producto.setEstado(Producto.Estado.Inactivo);
-                    Producto actualizado = productoRepository.save(producto);
-                    return ResponseEntity.ok(actualizado);
-                }).orElse(ResponseEntity.notFound().build());
+    @PutMapping("/update-producto/{id}")
+    public ResponseEntity<ApiResponse<ProductoResponseDto>> actualizar(
+            @PathVariable Long id,
+            @RequestBody ProductoRequestDto dto) {
+        ProductoResponseDto actualizado = productoService.actualizarProducto(id, dto);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Producto actualizado correctamente", actualizado)
+        );
     }
 
-    
+    @DeleteMapping("/delete-producto/{id}")
+    public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
+        productoService.eliminarProducto(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Producto eliminado correctamente", null)
+        );
+    }
+
+    @PutMapping("/cambiar-estado/{id}")
+    public ResponseEntity<ApiResponse<ProductoResponseDto>> cambiarEstado(@PathVariable Long id) {
+        ProductoResponseDto actualizado = productoService.cambiarEstado(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Estado del producto actualizado automáticamente", actualizado)
+        );
+}
+
 
 }

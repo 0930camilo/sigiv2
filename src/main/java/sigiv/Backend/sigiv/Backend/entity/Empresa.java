@@ -41,4 +41,25 @@ public class Empresa {
         Activo,
         Inactivo
     }
+
+@OneToMany(mappedBy = "empresa", cascade = CascadeType.ALL, orphanRemoval = true)
+@JsonManagedReference("empresa-categorias")
+private List<Categoria> categorias;
+
+
+
+    @OneToMany(mappedBy = "empresa", cascade = CascadeType.ALL, orphanRemoval = true)
+@JsonManagedReference("empresa-nominas")
+private List<Nomina> nominas;
+
+
+
+@OneToMany(mappedBy = "empresa", cascade = CascadeType.ALL, orphanRemoval = true)
+@JsonManagedReference("empresa-personas")
+private List<Persona> persona;
+
+
+@OneToMany(mappedBy = "empresa", cascade = CascadeType.ALL, orphanRemoval = true)
+@JsonManagedReference("empresa-proveedores")
+private List<Proveedor> proveedor;
 }

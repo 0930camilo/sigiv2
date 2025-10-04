@@ -28,18 +28,23 @@ public class Proveedor {
     private Long idproveedor;
 
     private String nombre;
-    private Double telefono;
+    private long telefono;
+    private String direccion;
 
-@Enumerated(EnumType.STRING)
-private Estado estado;
+ @Enumerated(EnumType.STRING)
+    private Estado estado;
 
-public enum Estado {
-    Activo, Inactivo
-}
+
+     // Enum declarado fuera de los atributos
+    public enum Estado {
+        Activo,
+        Inactivo
+    }
+
 @ManyToOne
-@JoinColumn(name = "usuario_idusuario")
-@JsonBackReference("usuario-proveedores")
-private Usuario usuario;
+@JoinColumn(name = "empresa_idempresa")
+@JsonBackReference("empresa-proveedores")
+private Empresa empresa;
 
 
 @OneToMany(mappedBy = "proveedor", cascade = CascadeType.ALL)

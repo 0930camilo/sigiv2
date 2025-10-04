@@ -79,4 +79,20 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
         usuarioRepository.deleteById(id);
     }
+
+     @Override
+public UsuarioResponseDto cambiarEstado(Long id) {
+    Usuario usuario = usuarioRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
+
+    // Cambiar estado automáticamente
+    if (usuario.getEstado() == Usuario.Estado.Activo) {
+        usuario.setEstado(Usuario.Estado.Inactivo);
+    } else {
+        usuario.setEstado(Usuario.Estado.Activo);
+    }
+
+    Usuario actualizado = usuarioRepository.save(usuario);
+    return UsuarioMapper.toDto(actualizado);
+}
 }

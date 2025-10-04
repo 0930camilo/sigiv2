@@ -37,29 +37,13 @@ public class Usuario {
     private Empresa empresa;
 
     
-@OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-@JsonManagedReference("usuario-productos")
-private List<Producto> productos;
 
-@OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-@JsonManagedReference("usuario-categorias")
-private List<Categoria> categorias;
+
 
 @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
 @JsonManagedReference("usuario-cotizaciones")
 private List<Cotizacion> cotizacion;
 
-@OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-@JsonManagedReference("usuario-nominas")
-private List<Nomina> nominas;
-
-@OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-@JsonManagedReference("usuario-personas")
-private List<Persona> persona;
-
-@OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-@JsonManagedReference("usuario-proveedores")
-private List<Proveedor> proveedor;
 
 @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
 @JsonManagedReference("usuario-ventas")

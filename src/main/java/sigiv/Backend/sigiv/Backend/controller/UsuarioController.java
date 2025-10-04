@@ -85,4 +85,13 @@ public class UsuarioController {
                         "Usuario eliminado correctamente", null)
         );
     }
+
+ @PutMapping("/cambiar-estado/{id}")
+public ResponseEntity<ApiResponse<UsuarioResponseDto>> cambiarEstado(@PathVariable Long id) {
+    UsuarioResponseDto actualizado = usuarioService.cambiarEstado(id);
+    return ResponseEntity.ok(
+            new ApiResponse<>(true, HttpStatus.OK.value(),
+                    "Estado del usuario actualizado automáticamente", actualizado)
+    );
+}
 }

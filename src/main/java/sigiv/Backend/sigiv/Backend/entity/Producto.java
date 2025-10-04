@@ -40,10 +40,7 @@ public enum Estado {
 }
 
 
-@ManyToOne
-@JoinColumn(name = "usuario_idusuario")
-@JsonBackReference("usuario-productos")
-private Usuario usuario;
+
 
 
 @ManyToOne

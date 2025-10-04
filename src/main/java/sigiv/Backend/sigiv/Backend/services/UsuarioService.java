@@ -13,4 +13,6 @@ public interface UsuarioService {
     List<UsuarioResponseDto> listarUsuarios();
     List<UsuarioResponseDto> listarPorEstado(Usuario.Estado estado);
     void eliminarUsuario(Long id);
+  UsuarioResponseDto cambiarEstado(Long id);
+
 }

@@ -23,7 +23,7 @@ public class Nomina {
     private BigDecimal totalPago;
 
     @ManyToOne
-    @JoinColumn(name = "usuario_idusuario")
-    @JsonBackReference("usuario-nominas")
-    private Usuario usuario;
+    @JoinColumn(name = "empresa_idempresa")
+    @JsonBackReference("empresa-nominas")
+    private Empresa empresa;
 }
