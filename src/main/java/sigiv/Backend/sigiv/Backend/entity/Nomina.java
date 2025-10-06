@@ -21,6 +21,17 @@ public class Nomina {
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
     private BigDecimal totalPago;
+    
+    @Enumerated(EnumType.STRING)
+    private Estado estado;
+
+
+     // Enum declarado fuera de los atributos
+    public enum Estado {
+        Activo,
+        Inactivo
+    }
+
 
     @ManyToOne
     @JoinColumn(name = "empresa_idempresa")

@@ -1,93 +1,100 @@
 package sigiv.Backend.sigiv.Backend.controller;
 
 import java.util.List;
-
-
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import lombok.RequiredArgsConstructor;
+import sigiv.Backend.sigiv.Backend.dto.persona.PersonaRequestDto;
+import sigiv.Backend.sigiv.Backend.dto.persona.PersonaResponseDto;
+
 import sigiv.Backend.sigiv.Backend.entity.Persona;
-import sigiv.Backend.sigiv.Backend.repository.PersonaRepository;
+import sigiv.Backend.sigiv.Backend.services.PersonaService;
+import sigiv.Backend.sigiv.Backend.util.ApiResponse;
 
 @RestController
-@RequestMapping("/persona")
+@RequestMapping("/personas")
+@RequiredArgsConstructor
 public class PersonaController {
 
-    @Autowired
-    private PersonaRepository personaRepository;
+    private final PersonaService personaService;
 
-    // Mostrar todas las personas
-    @GetMapping("/mostrar")
-    public List<Persona> obtenerTodas() {
-        return personaRepository.findAll();
+    @PostMapping("/crear-persona")
+    public ResponseEntity<ApiResponse<PersonaResponseDto>> crear(@RequestBody PersonaRequestDto dto) {
+        PersonaResponseDto created = personaService.crearPersona(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                new ApiResponse<>(true, HttpStatus.CREATED.value(),
+                        "Persona creada correctamente", created)
+        );
     }
 
-    // Personas activas
-    @GetMapping("/activas")
-    public List<Persona> obtenerActivas() {
-        return personaRepository.findByEstado(Persona.Estado.Activo);
-    }
-
-    // Personas inactivas
-    @GetMapping("/inactivas")
-    public List<Persona> obtenerInactivas() {
-        return personaRepository.findByEstado(Persona.Estado.Inactivo);
-    }
-
-    // Buscar persona por ID
     @GetMapping("/{id}")
-    public ResponseEntity<Persona> obtenerPorId(@PathVariable Long id) {
-        return personaRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ApiResponse<PersonaResponseDto>> obtenerPorId(@PathVariable Long id) {
+        PersonaResponseDto persona = personaService.obtenerPorId(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Persona encontrada", persona)
+        );
     }
 
-    // Guardar nueva persona
-    @PostMapping("/guardar")
-    public Persona guardar(@RequestBody Persona nuevaPersona) {
-        return personaRepository.save(nuevaPersona);
+    @GetMapping("/list-personas")
+    public ResponseEntity<ApiResponse<List<PersonaResponseDto>>> listar() {
+        List<PersonaResponseDto> personas = personaService.listarPersonas();
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Todas las personas listadas", personas)
+        );
     }
 
-    // Actualizar persona existente
-    @PutMapping("/actualizar/{id}")
-    public ResponseEntity<Persona> actualizar(@PathVariable Long id, @RequestBody Persona personaActualizada) {
-        return personaRepository.findById(id)
-                .map(persona -> {
-                    persona.setNombre(personaActualizada.getNombre());
-                    persona.setCorreo(personaActualizada.getCorreo());
-                    persona.setTelefono(personaActualizada.getTelefono());
-                    persona.setDireccion(personaActualizada.getDireccion());
-                    persona.setFechaNacimiento(personaActualizada.getFechaNacimiento());
-                    persona.setFechaIngreso(personaActualizada.getFechaIngreso());
-                    persona.setEstado(personaActualizada.getEstado());
-                    persona.setEmpresa(personaActualizada.getEmpresa());
-                    Persona actualizada = personaRepository.save(persona);
-                    return ResponseEntity.ok(actualizada);
-                }).orElse(ResponseEntity.notFound().build());
-    }
+    @GetMapping("/list-persona-status")
+    public ResponseEntity<ApiResponse<List<PersonaResponseDto>>> listarPorEstado(
+            @RequestParam(required = false) Persona.Estado estado) {
 
-    // Eliminar persona físicamente
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        if (personaRepository.existsById(id)) {
-            personaRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
+        List<PersonaResponseDto> personas;
+        String message;
+
+        if (estado != null) {
+            personas = personaService.listarPorEstado(estado);
+            message = "Personas listadas por estado: " + estado;
         } else {
-            return ResponseEntity.notFound().build();
+            personas = personaService.listarPersonas();
+            message = "Todas las personas listadas";
         }
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(), message, personas)
+        );
     }
 
-    // Eliminación lógica (cambiar estado a Inactivo)
-    @PutMapping("/eliminar/{id}")
-    public ResponseEntity<Persona> eliminarLogicamente(@PathVariable Long id) {
-        return personaRepository.findById(id)
-                .map(persona -> {
-                    persona.setEstado(Persona.Estado.Inactivo);
-                    Persona actualizada = personaRepository.save(persona);
-                    return ResponseEntity.ok(actualizada);
-                }).orElse(ResponseEntity.notFound().build());
+    @PutMapping("/update-persona/{id}")
+    public ResponseEntity<ApiResponse<PersonaResponseDto>> actualizar(
+            @PathVariable Long id,
+            @RequestBody PersonaRequestDto dto) {
+        PersonaResponseDto actualizado = personaService.actualizarPersona(id, dto);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Persona actualizada correctamente", actualizado)
+        );
     }
 
-  
+    @DeleteMapping("/delete-persona/{id}")
+    public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
+        personaService.eliminarPersona(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Persona eliminada correctamente", null)
+        );
+    }
+
+    @PutMapping("/cambiar-estado/{id}")
+    public ResponseEntity<ApiResponse<PersonaResponseDto>> cambiarEstado(@PathVariable Long id) {
+        PersonaResponseDto actualizado = personaService.cambiarEstado(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Estado de la persona actualizado automáticamente", actualizado)
+        );
+}
+
+
 }

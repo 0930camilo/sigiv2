@@ -1,84 +1,99 @@
 package sigiv.Backend.sigiv.Backend.controller;
 
-import java.math.BigDecimal;
 import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import lombok.RequiredArgsConstructor;
+import sigiv.Backend.sigiv.Backend.dto.nomina.NominaRequestDto;
+import sigiv.Backend.sigiv.Backend.dto.nomina.NominaResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Nomina;
-import sigiv.Backend.sigiv.Backend.repository.NominaRepository;
-import sigiv.Backend.sigiv.Backend.repository.PersonaNominaRepository;
+import sigiv.Backend.sigiv.Backend.services.NominaService;
+import sigiv.Backend.sigiv.Backend.util.ApiResponse;
 
 @RestController
 @RequestMapping("/nominas")
+@RequiredArgsConstructor
 public class NominaController {
 
-    @Autowired
-    private NominaRepository nominaRepository;
-    @Autowired
-    private PersonaNominaRepository personaNominaRepository;
+    private final NominaService nominaService;
 
-    // Obtener todas las nóminas
-    @GetMapping
-    public ResponseEntity<List<Nomina>> obtenerTodas() {
-        return ResponseEntity.ok(nominaRepository.findAll());
+    @PostMapping("/crear-nomina")
+    public ResponseEntity<ApiResponse<NominaResponseDto>> crear(@RequestBody NominaRequestDto dto) {
+        NominaResponseDto created = nominaService.crearNomina(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                new ApiResponse<>(true, HttpStatus.CREATED.value(),
+                        "Nomina creada correctamente", created)
+        );
     }
 
-    // Obtener nómina por ID
     @GetMapping("/{id}")
-    public ResponseEntity<Nomina> obtenerPorId(@PathVariable Long id) {
-        return nominaRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-// Guardar nueva nómina
-@PostMapping
-public ResponseEntity<Nomina> guardar(@RequestBody Nomina nuevaNomina) {
-    Nomina guardada = nominaRepository.save(nuevaNomina);
-
-    // 🔹 calcular total (aunque será 0 si no hay personas asociadas todavía)
-    BigDecimal total = personaNominaRepository.calcularTotalPorNomina(guardada.getIdnomina());
-    guardada.setTotalPago(total);
-
-    Nomina actualizada = nominaRepository.save(guardada);
-
-    return ResponseEntity.ok(actualizada);
-}
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Nomina> actualizar(@PathVariable Long id, @RequestBody Nomina nominaActualizada) {
-        return nominaRepository.findById(id)
-                .map(nomina -> {
-                    nomina.setDescripcion(nominaActualizada.getDescripcion());
-                    nomina.setFechaInicio(nominaActualizada.getFechaInicio());
-                    nomina.setFechaFin(nominaActualizada.getFechaFin());
-                    nomina.setEmpresa(nominaActualizada.getEmpresa());
-
-                    Nomina actualizada = nominaRepository.save(nomina);
-
-                    // recalcular total al actualizar
-                    BigDecimal total = personaNominaRepository.calcularTotalPorNomina(actualizada.getIdnomina());
-                    actualizada.setTotalPago(total);
-                    nominaRepository.save(actualizada);
-
-                    return ResponseEntity.ok(actualizada);
-                })
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ApiResponse<NominaResponseDto>> obtenerPorId(@PathVariable Long id) {
+        NominaResponseDto nomina = nominaService.obtenerPorId(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Nomina encontrada", nomina)
+        );
     }
 
+    @GetMapping("/list-nominas")
+    public ResponseEntity<ApiResponse<List<NominaResponseDto>>> listar() {
+        List<NominaResponseDto> nominas = nominaService.listarNominas();
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Todas las nominas listadas", nominas)
+        );
+    }
 
-    // Eliminar nómina (física)
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        if (nominaRepository.existsById(id)) {
-            nominaRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
+    @GetMapping("/list-nomina-status")
+    public ResponseEntity<ApiResponse<List<NominaResponseDto>>> listarPorEstado(
+            @RequestParam(required = false) Nomina.Estado estado) {
+
+        List<NominaResponseDto> nominas;
+        String message;
+
+        if (estado != null) {
+            nominas = nominaService.listarPorEstado(estado);
+            message = "Nominas listadas por estado: " + estado;
         } else {
-            return ResponseEntity.notFound().build();
+            nominas = nominaService.listarNominas();
+            message = "Todas las nominas listadas";
         }
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(), message, nominas)
+        );
     }
+
+    @PutMapping("/update-nomina/{id}")
+    public ResponseEntity<ApiResponse<NominaResponseDto>> actualizar(
+            @PathVariable Long id,
+            @RequestBody NominaRequestDto dto) {
+        NominaResponseDto actualizado = nominaService.actualizarNomina(id, dto);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Nomina actualizada correctamente", actualizado)
+        );
+    }
+
+    @DeleteMapping("/delete-nomina/{id}")
+    public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
+        nominaService.eliminarNomina(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Nomina eliminada correctamente", null)
+        );
+    }
+
+    @PutMapping("/cambiar-estado/{id}")
+    public ResponseEntity<ApiResponse<NominaResponseDto>> cambiarEstado(@PathVariable Long id) {
+        NominaResponseDto actualizado = nominaService.cambiarEstado(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Estado de la nomina actualizado automáticamente", actualizado)
+        );
+}
 
 
 }
