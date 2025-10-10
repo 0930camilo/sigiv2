@@ -1,76 +1,82 @@
 package sigiv.Backend.sigiv.Backend.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import sigiv.Backend.sigiv.Backend.entity.PersonaNomina;
-import sigiv.Backend.sigiv.Backend.entity.PersonaNominaId;
-import sigiv.Backend.sigiv.Backend.repository.PersonaNominaRepository;
-
-import java.util.List;
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import sigiv.Backend.sigiv.Backend.dto.PersonaNomina.PersonaNominaRequestDto;
+import sigiv.Backend.sigiv.Backend.dto.PersonaNomina.PersonaNominaResponseDto;
+import sigiv.Backend.sigiv.Backend.services.PersonaNominaService;
+import sigiv.Backend.sigiv.Backend.util.ApiResponse;
 
 @RestController
 @RequestMapping("/persona-nomina")
+@RequiredArgsConstructor
 public class PersonaNominaController {
 
-    @Autowired
-    private PersonaNominaRepository personaNominaRepository;
+    private final PersonaNominaService personaNominaService;
 
-    // 🔹 Listar todas las relaciones persona-nómina
-    @GetMapping
-    public ResponseEntity<List<PersonaNomina>> listarTodos() {
-        return ResponseEntity.ok(personaNominaRepository.findAll());
+    // ✅ Crear relación Persona-Nómina
+    @PostMapping("/crear")
+    public ResponseEntity<ApiResponse<PersonaNominaResponseDto>> crear(@RequestBody PersonaNominaRequestDto dto) {
+        PersonaNominaResponseDto creada = personaNominaService.crearPersonaNomina(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                new ApiResponse<>(true, HttpStatus.CREATED.value(),
+                        "Registro Persona-Nómina creado correctamente", creada)
+        );
     }
 
-    // 🔹 Buscar por idpersona e idnomina (clave compuesta)
-    @GetMapping("/{idpersona}/{idnomina}")
-    public ResponseEntity<PersonaNomina> obtenerPorId(
-            @PathVariable Long idpersona,
-            @PathVariable Long idnomina) {
-
-        PersonaNominaId id = new PersonaNominaId();
-        id.setIdpersona(idpersona);
-        id.setIdnomina(idnomina);
-        Optional<PersonaNomina> personaNomina = personaNominaRepository.findById(id);
-
-        return personaNomina.map(ResponseEntity::ok)
-                            .orElse(ResponseEntity.notFound().build());
+    // ✅ Obtener relación por ID de persona
+    @GetMapping("/{idPersona}")
+    public ResponseEntity<ApiResponse<PersonaNominaResponseDto>> obtenerPorId(@PathVariable Long idPersona) {
+        PersonaNominaResponseDto personaNomina = personaNominaService.obtenerPorId(idPersona);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Registro Persona-Nómina encontrado", personaNomina)
+        );
     }
 
-    // 🔹 Actualizar días trabajados o valor día
-    @PutMapping("/{idpersona}/{idnomina}")
-    public ResponseEntity<PersonaNomina> actualizar(
-            @PathVariable Long idpersona,
-            @PathVariable Long idnomina,
-            @RequestBody PersonaNomina datosActualizados) {
-
-        PersonaNominaId id = new PersonaNominaId();
-        id.setIdpersona(idpersona);
-        id.setIdnomina(idnomina);
-
-        return personaNominaRepository.findById(id).map(personaNomina -> {
-            personaNomina.setDiasTrabajados(datosActualizados.getDiasTrabajados());
-            personaNomina.setValorDia(datosActualizados.getValorDia());
-            PersonaNomina actualizado = personaNominaRepository.save(personaNomina);
-            return ResponseEntity.ok(actualizado);
-        }).orElse(ResponseEntity.notFound().build());
+    // ✅ Listar todas las relaciones Persona-Nómina
+    @GetMapping("/listar")
+    public ResponseEntity<ApiResponse<List<PersonaNominaResponseDto>>> listar() {
+        List<PersonaNominaResponseDto> lista = personaNominaService.listarPersonas();
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Todas las relaciones Persona-Nómina listadas correctamente", lista)
+        );
     }
 
-    // 🔹 Eliminar relación persona-nómina
-    @DeleteMapping("/{idpersona}/{idnomina}")
-    public ResponseEntity<Void> eliminar(
-            @PathVariable Long idpersona,
-            @PathVariable Long idnomina) {
+    // ✅ Actualizar relación Persona-Nómina
+    @PutMapping("/actualizar/{idPersona}")
+    public ResponseEntity<ApiResponse<PersonaNominaResponseDto>> actualizar(
+            @PathVariable Long idPersona,
+            @RequestBody PersonaNominaRequestDto dto) {
+        PersonaNominaResponseDto actualizada = personaNominaService.actualizarPersonaNomina(idPersona, dto);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Registro Persona-Nómina actualizado correctamente", actualizada)
+        );
+    }
 
-        PersonaNominaId id = new PersonaNominaId();
-        id.setIdpersona(idpersona);
-        id.setIdnomina(idnomina);
-        if (personaNominaRepository.existsById(id)) {
-            personaNominaRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+    // ✅ Eliminar relación Persona-Nómina
+    @DeleteMapping("/eliminar/{idPersona}")
+    public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long idPersona) {
+        personaNominaService.eliminarPersona(idPersona);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Registro Persona-Nómina eliminado correctamente", null)
+        );
+    }
+
+    // ⚠️ No aplica cambiarEstado, ya que PersonaNomina no tiene atributo 'estado'
+    @PutMapping("/cambiar-estado/{id}")
+    public ResponseEntity<ApiResponse<String>> cambiarEstado(@PathVariable Long id) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
+                new ApiResponse<>(false, HttpStatus.NOT_IMPLEMENTED.value(),
+                        "Este endpoint no aplica: PersonaNomina no tiene campo 'estado'", null)
+        );
     }
 }
