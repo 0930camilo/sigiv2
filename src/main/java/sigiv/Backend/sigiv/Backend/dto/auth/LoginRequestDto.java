@@ -10,6 +10,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoginRequestDto {
-    private String nombre_empresa;
+    private String usuario;
     private String clave;
 }

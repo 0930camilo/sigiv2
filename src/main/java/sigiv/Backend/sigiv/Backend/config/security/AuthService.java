@@ -23,7 +23,7 @@ public class AuthService {
      private final JwtUtil jwtUtil;
 
   public LoginResponseDto login(LoginRequestDto request) {
-        String username = request.getNombre_empresa();
+        String username = request.getUsuario();
         String password = request.getClave();
 
         Optional<Empresa> empresaOpt = empresaRepository.findByNombreEmpresaAndClave(username, password);
@@ -41,7 +41,7 @@ public class AuthService {
 
             return LoginResponseDto.builder()
                     .token(token)
-                    .nombre_empresa(empresa.getNombreEmpresa())
+                    .usuario(empresa.getNombreEmpresa())
                     .rol("ROLE_EMPRESA")
                     .build();
         }
@@ -61,11 +61,11 @@ public class AuthService {
 
             return LoginResponseDto.builder()
                     .token(token)
-                    .nombre_empresa(usuario.getNombres())
+                    .usuario(usuario.getNombres())
                     .rol("ROLE_USUARIO")
                     .build();
         }
-        
+
         throw new RuntimeException("Credenciales inválidas. Verifique nombre y clave.");
     }
 }
