@@ -10,7 +10,7 @@ public class EmpresaMapper {
         if (e == null) return null;
         return new EmpresaResponseDto(
             e.getId_Empresa(),
-            e.getNombre_empresa(),
+            e.getNombreEmpresa(),
             e.getClave(),
             e.getNit(),
             e.getTelefono(),
@@ -26,7 +26,7 @@ public class EmpresaMapper {
     }
 
     public static void updateEntityFromDto(EmpresaRequestDto dto, Empresa entity, Empresa empresa) {
-        if (dto.getNombre_empresa() != null) entity.setNombre_empresa(dto.getNombre_empresa());
+        if (dto.getNombre_empresa() != null) entity.setNombreEmpresa(dto.getNombre_empresa());
         if (dto.getClave() != null) entity.setClave(dto.getClave());
         if (dto.getNit() != null) entity.setNit(dto.getNit());
         entity.setTelefono(dto.getTelefono());

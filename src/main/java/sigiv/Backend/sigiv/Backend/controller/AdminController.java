@@ -62,7 +62,7 @@ public class AdminController {
     ) {
         return empresaRepository.findById(id)
                 .map(empresa -> {
-                    empresa.setNombre_empresa(empresaActualizada.getNombre_empresa());
+                    empresa.setNombreEmpresa(empresaActualizada.getNombreEmpresa());
                     empresa.setClave(empresaActualizada.getClave());
                     empresa.setNit(empresaActualizada.getNit());
                     empresa.setTelefono(empresaActualizada.getTelefono());

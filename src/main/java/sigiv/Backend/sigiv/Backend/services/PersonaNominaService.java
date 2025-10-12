@@ -4,10 +4,8 @@ import java.util.List;
 
 
 import sigiv.Backend.sigiv.Backend.dto.PersonaNomina.PersonaNominaRequestDto;
-
 import sigiv.Backend.sigiv.Backend.dto.PersonaNomina.PersonaNominaResponseDto;
 
-import sigiv.Backend.sigiv.Backend.entity.PersonaNomina;
 
 public interface PersonaNominaService {
     PersonaNominaResponseDto crearPersonaNomina(PersonaNominaRequestDto dto);
