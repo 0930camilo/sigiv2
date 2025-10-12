@@ -11,5 +11,5 @@ import sigiv.Backend.sigiv.Backend.entity.Usuario;
 @Repository
 public interface UsuarioRepository  extends JpaRepository<Usuario, Long> {
     List<Usuario> findByEstado(Usuario.Estado estado);
-    Optional<Usuario> findByNombresAndClave(String nombres, String clave);
+    Optional<Usuario> findByNombres(String nombres);
 }

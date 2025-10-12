@@ -3,6 +3,7 @@ package sigiv.Backend.sigiv.Backend.services.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -21,13 +22,13 @@ import sigiv.Backend.sigiv.Backend.services.EmpresaService;
 public class EmpresaServiceImpl implements EmpresaService {
 
     private final EmpresaRepository empresaRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public EmpresaResponseDto crearEmpresa(EmpresaRequestDto dto) {
-        // Siempre crea una nueva empresa desde el DTO
         Empresa empresa = EmpresaMapper.toEntityForCreate(dto, new Empresa());
-        empresa.setEstado(Empresa.Estado.Activo); // Estado por defecto
-
+        empresa.setClave(passwordEncoder.encode(dto.getClave()));
+        empresa.setEstado(Empresa.Estado.Activo);
         Empresa guardado = empresaRepository.save(empresa);
         return EmpresaMapper.toDto(guardado);
     }
@@ -74,30 +75,31 @@ public class EmpresaServiceImpl implements EmpresaService {
         }
         empresaRepository.deleteById(id);
     }
-       @Override
-public EmpresaResponseDto cambiarEstado(Long id) {
-    Empresa empresa = empresaRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Empresa", "id", id));
 
-    // Cambiar estado automáticamente
-    if (empresa.getEstado() == Empresa.Estado.Activo) {
-        empresa.setEstado(Empresa.Estado.Inactivo);
-    } else {
-        empresa.setEstado(Empresa.Estado.Activo);
+    @Override
+    public EmpresaResponseDto cambiarEstado(Long id) {
+        Empresa empresa = empresaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa", "id", id));
+
+        // Cambiar estado automáticamente
+        if (empresa.getEstado() == Empresa.Estado.Activo) {
+            empresa.setEstado(Empresa.Estado.Inactivo);
+        } else {
+            empresa.setEstado(Empresa.Estado.Activo);
+        }
+
+        Empresa actualizado = empresaRepository.save(empresa);
+        return EmpresaMapper.toDto(actualizado);
     }
 
-    Empresa actualizado = empresaRepository.save(empresa);
-    return EmpresaMapper.toDto(actualizado);
-}
+    @Override
+    public List<CategoriaResponseDto> categoriasEmpresa(Long id) {
+        Empresa empresa = empresaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa", "id", id));
 
-@Override
-public List<CategoriaResponseDto> categoriasEmpresa(Long id) {
-    Empresa empresa = empresaRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Empresa", "id", id));
-
-    return empresa.getCategorias()
-            .stream()
-            .map(c -> CategoriaMapper.toDto(c))
-            .collect(Collectors.toList());
-}
+        return empresa.getCategorias()
+                .stream()
+                .map(c -> CategoriaMapper.toDto(c))
+                .collect(Collectors.toList());
+    }
 }

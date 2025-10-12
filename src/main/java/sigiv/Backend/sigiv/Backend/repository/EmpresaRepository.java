@@ -10,6 +10,6 @@ import sigiv.Backend.sigiv.Backend.entity.Empresa;
 public interface EmpresaRepository extends JpaRepository<Empresa, Long>{
     
   List<Empresa> findByEstado(Empresa.Estado estado);
-  Optional<Empresa> findByNombreEmpresaAndClave(String nombreEmpresa, String clave);
+  Optional<Empresa> findByNombreEmpresa(String nombreEmpresa);
 }
 

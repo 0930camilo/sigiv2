@@ -3,6 +3,7 @@ package sigiv.Backend.sigiv.Backend.services.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import sigiv.Backend.sigiv.Backend.services.UsuarioService;
 public class UsuarioServiceImpl implements UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final EmpresaRepository empresaRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UsuarioResponseDto crearUsuario(UsuarioRequestDto dto) {
@@ -30,6 +32,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                     .orElseThrow(() -> new IllegalArgumentException("Empresa no encontrada"));
         }
         Usuario usuario = UsuarioMapper.toEntityForCreate(dto, empresa);
+        usuario.setClave(passwordEncoder.encode(dto.getClave()));
         Usuario guardado = usuarioRepository.save(usuario);
         return UsuarioMapper.toDto(guardado);
     }
