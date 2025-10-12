@@ -1,25 +1,22 @@
 package sigiv.Backend.sigiv.Backend.dto.nomina;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import sigiv.Backend.sigiv.Backend.entity.Nomina;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class NominaRequestDto {
-
     private Long idNomina;
     private String descripcion;
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
-    private BigDecimal totalPago;
     private Nomina.Estado estado;
-    private Long empresaId;
+    private Long empresaId; // 🔹 totalPago se calcula automáticamente
 }

@@ -27,6 +27,7 @@ public class DetalleVentas {
     private BigDecimal subtotal;
 
     private String descripcionProducto;
+    
 
     @ManyToOne
     @JoinColumn(name = "venta_idventa")
