@@ -1,18 +1,23 @@
 package sigiv.Backend.sigiv.Backend.dto.ventas;
 
-
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import lombok.Data;
+import java.util.List;
 
-@Data
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import sigiv.Backend.sigiv.Backend.dto.detalleVenta.DetalleVentaRequestDto;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class VentasRequestDto {
-    private LocalDateTime fecha;
-    private BigDecimal total;
+
+    private Long usuarioId;
     private String nombreCliente;
     private String telefonoCliente;
     private BigDecimal efectivo;
-    private BigDecimal cambio;
-    private Long usuarioId; // para asociar con el usuario
- 
+    private List<DetalleVentaRequestDto> detalles;
 }

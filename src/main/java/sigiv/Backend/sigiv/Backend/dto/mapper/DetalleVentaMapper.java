@@ -13,35 +13,23 @@ import sigiv.Backend.sigiv.Backend.entity.Ventas;
 @Component
 public class DetalleVentaMapper {
 
-    // construye entidad a partir del request y el producto + venta
-    public DetalleVentas toEntity(DetalleVentaRequestDto dto, Producto producto, Ventas venta) {
-        DetalleVentas entity = new DetalleVentas();
-        entity.setProducto(producto);
-        entity.setVenta(venta);
-        entity.setCantidad(dto.getCantidad());
-        entity.setPrecio(producto.getPrecio()); // precio tomado del producto
-        entity.setDescripcionProducto(
-            dto.getDescripcionProducto() != null ? dto.getDescripcionProducto() : producto.getNombre()
-        );
-
-        // Calcula subtotal en Java (evita depender de columnas generated always)
-        if (entity.getCantidad() != null && entity.getPrecio() != null) {
-            entity.setSubtotal(entity.getPrecio().multiply(
-                java.math.BigDecimal.valueOf(entity.getCantidad())));
-        } else {
-            entity.setSubtotal(java.math.BigDecimal.ZERO);
-        }
-        return entity;
+    public DetalleVentas toEntity(DetalleVentaRequestDto dto, Ventas venta, Producto producto, BigDecimal subtotal) {
+        DetalleVentas detalle = new DetalleVentas();
+        detalle.setVenta(venta);
+        detalle.setProducto(producto);
+        detalle.setCantidad(dto.getCantidad());
+        detalle.setPrecio(producto.getPrecio());
+        detalle.setSubtotal(subtotal);
+        detalle.setDescripcionProducto(producto.getNombre());
+        return detalle;
     }
 
     public DetalleVentaResponseDto toDto(DetalleVentas entity) {
-        DetalleVentaResponseDto dto = new DetalleVentaResponseDto();
-        dto.setIddetalle(entity.getIddetalle());
-        dto.setProductoId(entity.getProducto() != null ? entity.getProducto().getIdproducto() : null);
-        dto.setDescripcionProducto(entity.getDescripcionProducto());
-        dto.setCantidad(entity.getCantidad());
-        dto.setPrecio(entity.getPrecio());
-        dto.setSubtotal(entity.getSubtotal());
-        return dto;
+        return new DetalleVentaResponseDto(
+                entity.getDescripcionProducto(),
+                entity.getCantidad(),
+                entity.getPrecio(),
+                entity.getSubtotal()
+        );
     }
 }

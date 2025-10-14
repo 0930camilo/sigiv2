@@ -10,7 +10,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DetalleVentaRequestDto {
-    private Long productoId;          // id del producto seleccionado
-    private Integer cantidad;         // cantidad a vender
-    private String descripcionProducto; // opcional, si quieres sobreescribir descripción
+    private Long productoId;
+    private Integer cantidad;
 }

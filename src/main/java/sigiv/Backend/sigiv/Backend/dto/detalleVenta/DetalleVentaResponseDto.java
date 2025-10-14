@@ -11,8 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DetalleVentaResponseDto {
-    private Long iddetalle;
-    private Long productoId;
+
     private String descripcionProducto;
     private Integer cantidad;
     private BigDecimal precio;
