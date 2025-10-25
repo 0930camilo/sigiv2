@@ -39,10 +39,10 @@ public class Usuario {
     
 
 
-
 @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-@JsonManagedReference("usuario-cotizaciones")
-private List<Cotizacion> cotizacion;
+@JsonManagedReference("usuario-cotizacion")
+private List<Cotizacion> cotizaciones;
+
 
 
 @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -24,12 +24,21 @@ public class GlobalExceptionHandler {
                         ex.getMessage(), null)
         );
     }
+@ExceptionHandler(Exception.class)
+public ResponseEntity<ApiResponse<Object>> handleGeneralError(Exception ex) {
+    ex.printStackTrace(); // 🔍 muestra la traza completa en consola
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Void>> handleGeneralError(Exception ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                new ApiResponse<>(false, HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                        "Error interno del servidor", null)
-        );
-    }
+    String causa = (ex.getCause() != null) ? ex.getCause().toString() : "Sin causa interna";
+
+    // 🔹 Incluimos mensaje y causa reales en la respuesta
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+            new ApiResponse<>(
+                    false,
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Error interno del servidor: " + ex.getMessage() + " | Causa: " + causa,
+                    null
+            )
+    );
+}
+
 }

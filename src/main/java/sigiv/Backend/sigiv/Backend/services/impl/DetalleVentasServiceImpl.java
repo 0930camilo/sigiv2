@@ -104,4 +104,34 @@ public class DetalleVentasServiceImpl implements DetalleVentasService {
             ventasRepository.save(venta);
         }
     }
+    @Override
+@Transactional
+public void eliminarTodosLosDetallesDeVenta(Long ventaId) {
+    // Buscar venta
+    Ventas venta = ventasRepository.findById(ventaId)
+            .orElseThrow(() -> new RuntimeException("Venta no encontrada con ID: " + ventaId));
+
+    // Obtener todos los detalles asociados a la venta
+    var detalles = detalleVentaRepository.findByVentaIdventa(ventaId);
+
+    // Reponer stock de cada producto antes de eliminar
+    for (DetalleVentas detalle : detalles) {
+        Producto producto = detalle.getProducto();
+        if (producto != null && detalle.getCantidad() != null) {
+            producto.setCantidad(producto.getCantidad() + detalle.getCantidad());
+            productoRepository.save(producto);
+        }
+    }
+
+    // Eliminar todos los detalles
+    detalleVentaRepository.deleteAll(detalles);
+
+    // Reiniciar total y cambio de la venta
+    venta.setTotal(BigDecimal.ZERO);
+    if (venta.getEfectivo() != null) {
+        venta.setCambio(venta.getEfectivo()); // el cambio es igual al efectivo si ya no hay productos
+    }
+    ventasRepository.save(venta);
+}
+
 }

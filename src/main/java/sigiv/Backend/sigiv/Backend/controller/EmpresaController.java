@@ -1,6 +1,10 @@
 package sigiv.Backend.sigiv.Backend.controller;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
+
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -10,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import sigiv.Backend.sigiv.Backend.dto.catego.CategoriaResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.empre.EmpresaRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.empre.EmpresaResponseDto;
+import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.user.UsuarioResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Empresa;
 import sigiv.Backend.sigiv.Backend.services.EmpresaService;
@@ -107,4 +112,60 @@ public ResponseEntity<ApiResponse<List<CategoriaResponseDto>>> listarCategoriasP
                     "Categorías de la empresa con id " + id, categorias)
     );
 }
+
+@GetMapping("/{id}/proveedores")
+public ResponseEntity<ApiResponse<List<ProveedorResponseDto>>> listarProveedoresPorEmpresa(@PathVariable Long id) {
+    List<ProveedorResponseDto> proveedores = empresaService.proveedoresEmpresa(id);
+    return ResponseEntity.ok(
+            new ApiResponse<>(true, HttpStatus.OK.value(),
+                    "Proveedores de la empresa con id " + id, proveedores)
+    );
+}
+
+
+
+@GetMapping("/{id}/usuarios")
+public ResponseEntity<ApiResponse<List<UsuarioResponseDto>>> listarUsuariosPorEmpresa(@PathVariable Long id) {
+    List<UsuarioResponseDto> usuarios = empresaService.usuariosEmpresa(id);
+    return ResponseEntity.ok(
+            new ApiResponse<>(true, HttpStatus.OK.value(),
+                    "Usuarios de la empresa con id " + id, usuarios)
+    );
+}
+
+
+@GetMapping("/{id}/total-vendido")
+public ResponseEntity<ApiResponse<BigDecimal>> totalVendidoPorEmpresa(@PathVariable Long id) {
+    BigDecimal total = empresaService.calcularTotalVendido(id);
+    return ResponseEntity.ok(
+            new ApiResponse<>(true, HttpStatus.OK.value(),
+                    "Total vendido por la empresa con id " + id, total)
+    );
+}
+
+
+@GetMapping("/{id}/total-vendido-rango")
+public ResponseEntity<ApiResponse<BigDecimal>> totalVendidoPorEmpresaEntreFechas(
+        @PathVariable Long id,
+        @RequestParam("fechaInicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+        @RequestParam("fechaFin") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+
+    BigDecimal total = empresaService.calcularTotalVendidoEntreFechas(id, fechaInicio, fechaFin);
+
+    return ResponseEntity.ok(
+            new ApiResponse<>(true, HttpStatus.OK.value(),
+                    "Total vendido por la empresa con id " + id + " entre " + fechaInicio + " y " + fechaFin,
+                    total)
+    );
+}
+@GetMapping("/ganancia/empresa/{idEmpresa}")
+public ResponseEntity<ApiResponse<BigDecimal>> obtenerGananciaPorEmpresa(@PathVariable Long idEmpresa) {
+    BigDecimal ganancia = empresaService.calcularGananciaPorEmpresa(idEmpresa);
+    return ResponseEntity.ok(
+        new ApiResponse<>(true, HttpStatus.OK.value(),
+                "Ganancia obtenida correctamente para la empresa con id " + idEmpresa, ganancia)
+    );  
+}
+
+
 }

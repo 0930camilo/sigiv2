@@ -2,23 +2,20 @@ package sigiv.Backend.sigiv.Backend.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
 @Table(name = "Cotizacion")
 @Data
 public class Cotizacion {
-     @Id
+
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idcotizacion;
 
@@ -27,9 +24,13 @@ public class Cotizacion {
     private LocalDateTime fecha;
     private BigDecimal total;
 
- @ManyToOne
-@JoinColumn(name = "usuario_idusuario")
-@JsonBackReference("usuario-cotizaciones")
-private Usuario usuario;
+    @ManyToOne
+    @JoinColumn(name = "usuario_idusuario")
+    @JsonBackReference("usuario-cotizacion")
+    private Usuario usuario;
 
+    // ✅ Relación con los detalles de cotización (ahora con fetch EAGER)
+    @OneToMany(mappedBy = "cotizacion", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonManagedReference("cotizacion-detalles")
+    private List<DetalleCotizacion> detalles;
 }
