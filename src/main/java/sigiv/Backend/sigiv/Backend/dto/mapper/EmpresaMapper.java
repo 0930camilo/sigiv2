@@ -9,7 +9,7 @@ public class EmpresaMapper {
     public static EmpresaResponseDto toDto(Empresa e) {
         if (e == null) return null;
         return new EmpresaResponseDto(
-            e.getId_Empresa(),
+            e.getIdEmpresa(),
             e.getNombreEmpresa(),
             e.getClave(),
             e.getNit(),

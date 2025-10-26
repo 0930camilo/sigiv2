@@ -35,7 +35,7 @@ public class AuthService {
             if (passwordEncoder.matches(password, empresa.getClave())) {
                 Map<String, Object> claims = new HashMap<>();
                 claims.put("rol", "ROLE_EMPRESA");
-                claims.put("id", empresa.getId_Empresa());
+                claims.put("id", empresa.getIdEmpresa());
                 claims.put("nombre_empresa", empresa.getNombreEmpresa());
                 claims.put("estado", empresa.getEstado());
                 claims.put("nit", empresa.getNit());
@@ -57,10 +57,10 @@ public class AuthService {
             if (passwordEncoder.matches(password, usuario.getClave())) {
                 Map<String, Object> claims = new HashMap<>();
                 claims.put("rol", "ROLE_USUARIO");
-                claims.put("id", usuario.getId_usuario());
+                claims.put("id", usuario.getIdUsuario());
                 claims.put("nombre", usuario.getNombres());
                 claims.put("estado", usuario.getEstado());
-                claims.put("empresa_id", usuario.getEmpresa().getId_Empresa());
+                claims.put("empresa_id", usuario.getEmpresa().getIdEmpresa());
 
                 String token = jwtUtil.generarToken(username, claims);
 

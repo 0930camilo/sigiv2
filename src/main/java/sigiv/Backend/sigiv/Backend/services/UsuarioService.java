@@ -2,6 +2,8 @@ package sigiv.Backend.sigiv.Backend.services;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+
 import sigiv.Backend.sigiv.Backend.dto.user.UsuarioRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.user.UsuarioResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Usuario;
@@ -13,6 +15,8 @@ public interface UsuarioService {
     List<UsuarioResponseDto> listarUsuarios();
     List<UsuarioResponseDto> listarPorEstado(Usuario.Estado estado);
     void eliminarUsuario(Long id);
-  UsuarioResponseDto cambiarEstado(Long id);
+    UsuarioResponseDto cambiarEstado(Long id);
+    Page<UsuarioResponseDto> listarUsuariosPorEmpresa(Long empresaId, int page, int size);
+
 
 }

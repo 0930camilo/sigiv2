@@ -9,12 +9,12 @@ public class UsuarioMapper {
     public static UsuarioResponseDto toDto(Usuario u) {
         if (u == null) return null;
         return new UsuarioResponseDto(
-            u.getId_usuario(),
+            u.getIdUsuario(),
             u.getNombres(),
             u.getDireccion(),
             u.getTelefono(),
             u.getEstado(),
-            u.getEmpresa() != null ? u.getEmpresa().getId_Empresa() : null
+            u.getEmpresa() != null ? u.getEmpresa().getIdEmpresa() : null
         );
     }
 

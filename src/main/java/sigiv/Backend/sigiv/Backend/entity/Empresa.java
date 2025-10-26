@@ -28,7 +28,7 @@ public class Empresa {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id_Empresa;
+    private long idEmpresa;
 
     private String nombreEmpresa;
     private String clave;

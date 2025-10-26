@@ -3,6 +3,10 @@ package sigiv.Backend.sigiv.Backend.services.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -83,19 +87,28 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuarioRepository.deleteById(id);
     }
 
-     @Override
-public UsuarioResponseDto cambiarEstado(Long id) {
-    Usuario usuario = usuarioRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
+    @Override
+    public UsuarioResponseDto cambiarEstado(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
 
-    // Cambiar estado automáticamente
-    if (usuario.getEstado() == Usuario.Estado.Activo) {
-        usuario.setEstado(Usuario.Estado.Inactivo);
-    } else {
-        usuario.setEstado(Usuario.Estado.Activo);
+        // Cambiar estado automáticamente
+        if (usuario.getEstado() == Usuario.Estado.Activo) {
+            usuario.setEstado(Usuario.Estado.Inactivo);
+        } else {
+            usuario.setEstado(Usuario.Estado.Activo);
+        }
+
+        Usuario actualizado = usuarioRepository.save(usuario);
+        return UsuarioMapper.toDto(actualizado);
     }
 
-    Usuario actualizado = usuarioRepository.save(usuario);
-    return UsuarioMapper.toDto(actualizado);
-}
+    @Override
+    public Page<UsuarioResponseDto> listarUsuariosPorEmpresa(Long empresaId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("idUsuario").ascending());
+        Page<Usuario> usuariosPage = usuarioRepository.findByEmpresa_IdEmpresa(empresaId, pageable);
+
+        return usuariosPage.map(UsuarioMapper::toDto);
+    }
+
 }

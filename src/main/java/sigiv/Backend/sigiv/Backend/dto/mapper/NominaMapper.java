@@ -16,7 +16,7 @@ public class NominaMapper {
             n.getFechaFin(),
             n.getTotalPago(),
             n.getEstado(),
-            n.getEmpresa() != null ? n.getEmpresa().getId_Empresa() : null
+            n.getEmpresa() != null ? n.getEmpresa().getIdEmpresa() : null
         );
     }
 

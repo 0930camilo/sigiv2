@@ -15,7 +15,7 @@ public class ProveedorMapper {
             p.getTelefono(),
             p.getDireccion(),
             p.getEstado(),
-            p.getEmpresa() != null ? p.getEmpresa().getId_Empresa() : null
+            p.getEmpresa() != null ? p.getEmpresa().getIdEmpresa() : null
         );
     }
 

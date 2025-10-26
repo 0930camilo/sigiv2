@@ -40,11 +40,11 @@ public class VentasController {
     // Guardar nueva venta
     @PostMapping
     public ResponseEntity<?> guardar(@RequestBody Ventas nuevaVenta) {
-        if (nuevaVenta.getUsuario() == null || nuevaVenta.getUsuario().getId_usuario() == 0) {
+        if (nuevaVenta.getUsuario() == null || nuevaVenta.getUsuario().getIdUsuario() == 0) {
             return ResponseEntity.badRequest().body("El ID del usuario es obligatorio");
         }
 
-        Optional<Usuario> usuarioOpt = usuarioRepository.findById(nuevaVenta.getUsuario().getId_usuario());
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(nuevaVenta.getUsuario().getIdUsuario());
         if (!usuarioOpt.isPresent()) {
             return ResponseEntity.badRequest().body("Usuario no encontrado");
         }
@@ -68,8 +68,8 @@ public class VentasController {
                     venta.setEfectivo(ventaActualizada.getEfectivo());
                     venta.setCambio(ventaActualizada.getCambio());
 
-                    if (ventaActualizada.getUsuario() != null && ventaActualizada.getUsuario().getId_usuario() != 0) {
-                        usuarioRepository.findById(ventaActualizada.getUsuario().getId_usuario())
+                    if (ventaActualizada.getUsuario() != null && ventaActualizada.getUsuario().getIdUsuario() != 0) {
+                        usuarioRepository.findById(ventaActualizada.getUsuario().getIdUsuario())
                                 .ifPresent(venta::setUsuario);
                     }
 

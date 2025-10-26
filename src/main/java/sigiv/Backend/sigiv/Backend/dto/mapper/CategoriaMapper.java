@@ -13,7 +13,7 @@ public class CategoriaMapper {
             c.getIdcategoria(),
             c.getNombre(),
             c.getEstado(),
-            c.getEmpresa() != null ? c.getEmpresa().getId_Empresa() : null
+            c.getEmpresa() != null ? c.getEmpresa().getIdEmpresa() : null
         );
     }
 
