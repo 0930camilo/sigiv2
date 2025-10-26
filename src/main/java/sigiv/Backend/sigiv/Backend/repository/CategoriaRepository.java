@@ -18,10 +18,10 @@ public interface CategoriaRepository  extends JpaRepository<Categoria, Long> {
     @Query("""
         SELECT c
         FROM Categoria c
-        WHERE c.empresa.id_Empresa = (
-            SELECT u.empresa.id_Empresa
+        WHERE c.empresa.idEmpresa = (
+            SELECT u.empresa.idEmpresa
             FROM Usuario u
-            WHERE u.id_usuario = :idUsuario
+            WHERE u.idUsuario = :idUsuario
         )
     """)
     List<Categoria> findCategoriasByUsuario(@Param("idUsuario") Long idUsuario);

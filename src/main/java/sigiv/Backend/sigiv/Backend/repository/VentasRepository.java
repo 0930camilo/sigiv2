@@ -11,13 +11,13 @@ import sigiv.Backend.sigiv.Backend.entity.Ventas;
 public interface VentasRepository extends JpaRepository<Ventas, Long> {
 
 
-    @Query("SELECT COALESCE(SUM(v.total), 0) FROM Ventas v WHERE v.usuario.id_usuario = :idUsuario")
+    @Query("SELECT COALESCE(SUM(v.total), 0) FROM Ventas v WHERE v.usuario.idUsuario = :idUsuario")
     BigDecimal totalVendidoPorUsuario(@Param("idUsuario") Long idUsuario);
 
 @Query("""
     SELECT COALESCE(SUM(v.total), 0)
     FROM Ventas v
-    WHERE v.usuario.id_usuario = :idUsuario
+    WHERE v.usuario.idUsuario = :idUsuario
     AND v.fecha BETWEEN :fechaInicio AND :fechaFin
 """)
 BigDecimal totalVendidoPorUsuarioEntreFechas(
@@ -32,7 +32,7 @@ BigDecimal totalVendidoPorUsuarioEntreFechas(
 @Query("""
     SELECT COALESCE(SUM(v.total), 0)
     FROM Ventas v
-    WHERE v.usuario.empresa.id_Empresa = :idEmpresa
+    WHERE v.usuario.empresa.idEmpresa = :idEmpresa
 """)
 BigDecimal totalVendidoPorEmpresa(@Param("idEmpresa") Long idEmpresa);
 
@@ -40,7 +40,7 @@ BigDecimal totalVendidoPorEmpresa(@Param("idEmpresa") Long idEmpresa);
 @Query("""
     SELECT COALESCE(SUM(v.total), 0)
     FROM Ventas v
-    WHERE v.usuario.empresa.id_Empresa = :idEmpresa
+    WHERE v.usuario.empresa.idEmpresa = :idEmpresa
     AND v.fecha BETWEEN :fechaInicio AND :fechaFin
 """)
 BigDecimal totalVendidoPorEmpresaEntreFechas(
@@ -59,7 +59,7 @@ BigDecimal totalVendidoPorEmpresaEntreFechas(
         FROM Ventas v
         JOIN v.detalles dv
         JOIN dv.producto p
-        WHERE v.usuario.id_usuario = :idUsuario
+        WHERE v.usuario.idUsuario = :idUsuario
     """)
     BigDecimal gananciaPorUsuario(@Param("idUsuario") Long idUsuario);
 
@@ -71,7 +71,7 @@ BigDecimal totalVendidoPorEmpresaEntreFechas(
         FROM Ventas v
         JOIN v.detalles dv
         JOIN dv.producto p
-        WHERE v.usuario.empresa.id_Empresa = :idEmpresa
+        WHERE v.usuario.empresa.idEmpresa = :idEmpresa
     """)
     BigDecimal gananciaPorEmpresa(@Param("idEmpresa") Long idEmpresa);
 

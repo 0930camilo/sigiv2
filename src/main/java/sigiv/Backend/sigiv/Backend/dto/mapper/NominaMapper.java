@@ -27,7 +27,7 @@ public class NominaMapper {
     }
 
     public static NominaResponseDto toDto(Nomina entity) {
-        String empresaNombre = (entity.getEmpresa() != null) ? entity.getEmpresa().getNombre_empresa() : null;
+        String empresaNombre = (entity.getEmpresa() != null) ? entity.getEmpresa().getNombreEmpresa() : null;
         NominaResponseDto dto = new NominaResponseDto();
         dto.setIdNomina(entity.getIdnomina());
         dto.setDescripcion(entity.getDescripcion());
