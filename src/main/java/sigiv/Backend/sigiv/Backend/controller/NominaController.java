@@ -19,81 +19,77 @@ public class NominaController {
 
     private final NominaService nominaService;
 
+    // ✅ Crear nómina
     @PostMapping("/crear-nomina")
     public ResponseEntity<ApiResponse<NominaResponseDto>> crear(@RequestBody NominaRequestDto dto) {
         NominaResponseDto created = nominaService.crearNomina(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new ApiResponse<>(true, HttpStatus.CREATED.value(),
-                        "Nomina creada correctamente", created)
+                        "Nómina creada correctamente", created)
         );
     }
 
+    // ✅ Obtener nómina por ID
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<NominaResponseDto>> obtenerPorId(@PathVariable Long id) {
-        NominaResponseDto nomina = nominaService.obtenerPorId(id);
+        NominaResponseDto nomina = nominaService.obtenerNominaPorId(id);
         return ResponseEntity.ok(
                 new ApiResponse<>(true, HttpStatus.OK.value(),
-                        "Nomina encontrada", nomina)
+                        "Nómina encontrada", nomina)
         );
     }
 
-    @GetMapping("/list-nominas")
+    // ✅ Listar todas las nóminas
+    @GetMapping("/listar")
     public ResponseEntity<ApiResponse<List<NominaResponseDto>>> listar() {
         List<NominaResponseDto> nominas = nominaService.listarNominas();
         return ResponseEntity.ok(
                 new ApiResponse<>(true, HttpStatus.OK.value(),
-                        "Todas las nominas listadas", nominas)
+                        "Todas las nóminas listadas correctamente", nominas)
         );
     }
 
-    @GetMapping("/list-nomina-status")
+    // ✅ Listar nóminas por estado
+    @GetMapping("/listar-por-estado")
     public ResponseEntity<ApiResponse<List<NominaResponseDto>>> listarPorEstado(
-            @RequestParam(required = false) Nomina.Estado estado) {
+            @RequestParam Nomina.Estado estado) {
 
-        List<NominaResponseDto> nominas;
-        String message;
-
-        if (estado != null) {
-            nominas = nominaService.listarPorEstado(estado);
-            message = "Nominas listadas por estado: " + estado;
-        } else {
-            nominas = nominaService.listarNominas();
-            message = "Todas las nominas listadas";
-        }
-
+        List<NominaResponseDto> nominas = nominaService.listarPorEstado(estado);
         return ResponseEntity.ok(
-                new ApiResponse<>(true, HttpStatus.OK.value(), message, nominas)
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Nóminas listadas con estado: " + estado, nominas)
         );
     }
 
-    @PutMapping("/update-nomina/{id}")
+    // ✅ Actualizar nómina
+    @PutMapping("/actualizar/{id}")
     public ResponseEntity<ApiResponse<NominaResponseDto>> actualizar(
             @PathVariable Long id,
             @RequestBody NominaRequestDto dto) {
         NominaResponseDto actualizado = nominaService.actualizarNomina(id, dto);
         return ResponseEntity.ok(
                 new ApiResponse<>(true, HttpStatus.OK.value(),
-                        "Nomina actualizada correctamente", actualizado)
+                        "Nómina actualizada correctamente", actualizado)
         );
     }
 
-    @DeleteMapping("/delete-nomina/{id}")
+    // ✅ Eliminar nómina
+    @DeleteMapping("/eliminar/{id}")
     public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
         nominaService.eliminarNomina(id);
         return ResponseEntity.ok(
                 new ApiResponse<>(true, HttpStatus.OK.value(),
-                        "Nomina eliminada correctamente", null)
+                        "Nómina eliminada correctamente", null)
         );
     }
 
+    // ✅ Cambiar estado automáticamente
     @PutMapping("/cambiar-estado/{id}")
     public ResponseEntity<ApiResponse<NominaResponseDto>> cambiarEstado(@PathVariable Long id) {
         NominaResponseDto actualizado = nominaService.cambiarEstado(id);
         return ResponseEntity.ok(
                 new ApiResponse<>(true, HttpStatus.OK.value(),
-                        "Estado de la nomina actualizado automáticamente", actualizado)
+                        "Estado de la nómina actualizado correctamente", actualizado)
         );
-}
-
-
+    }
 }

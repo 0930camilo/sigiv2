@@ -1,5 +1,8 @@
 package sigiv.Backend.sigiv.Backend.services.impl;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,13 +22,17 @@ import sigiv.Backend.sigiv.Backend.entity.Usuario;
 import sigiv.Backend.sigiv.Backend.exception.ResourceNotFoundException;
 import sigiv.Backend.sigiv.Backend.repository.EmpresaRepository;
 import sigiv.Backend.sigiv.Backend.repository.UsuarioRepository;
+import sigiv.Backend.sigiv.Backend.repository.VentasRepository;
 import sigiv.Backend.sigiv.Backend.services.UsuarioService;
+import sigiv.Backend.sigiv.Backend.repository.CategoriaRepository;
 
 @Service
 @RequiredArgsConstructor
 public class UsuarioServiceImpl implements UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final EmpresaRepository empresaRepository;
+    private final VentasRepository ventasRepository;
+    private final CategoriaRepository categoriaRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -99,8 +106,18 @@ public class UsuarioServiceImpl implements UsuarioService {
             usuario.setEstado(Usuario.Estado.Activo);
         }
 
-        Usuario actualizado = usuarioRepository.save(usuario);
-        return UsuarioMapper.toDto(actualizado);
+    Usuario actualizado = usuarioRepository.save(usuario);
+    return UsuarioMapper.toDto(actualizado);
+}
+
+ @Override
+    public BigDecimal calcularTotalVendido(Long idUsuario) {
+        // Verificamos que el usuario exista
+        if (!usuarioRepository.existsById(idUsuario)) {
+            throw new ResourceNotFoundException("Usuario", "id", idUsuario);
+        }
+
+        return ventasRepository.totalVendidoPorUsuario(idUsuario);
     }
 
     @Override
@@ -110,5 +127,50 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         return usuariosPage.map(UsuarioMapper::toDto);
     }
+
+
+@Override
+public BigDecimal calcularTotalVendidoEntreFechas(Long idUsuario, LocalDate fechaInicio, LocalDate fechaFin) {
+    if (!usuarioRepository.existsById(idUsuario)) {
+        throw new ResourceNotFoundException("Usuario", "id", idUsuario);
+    }
+
+    // Convertimos LocalDate a LocalDateTime para que coincidan los tipos
+    LocalDateTime inicioDelDia = fechaInicio.atStartOfDay();
+    LocalDateTime finDelDia = fechaFin.atTime(23, 59, 59);
+
+    return ventasRepository.totalVendidoPorUsuarioEntreFechas(idUsuario, inicioDelDia, finDelDia);
+}
+@Override
+public BigDecimal calcularGananciaPorUsuario(Long idUsuario) {
+    return ventasRepository.gananciaPorUsuario(idUsuario);
+}
+    @Override
+public List<sigiv.Backend.sigiv.Backend.entity.Categoria> listarCategoriasPorUsuario(Long idUsuario) {
+    // Verificar que el usuario exista
+    Usuario usuario = usuarioRepository.findById(idUsuario)
+            .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", idUsuario));
+
+    // Obtener las categorías de la empresa a la que pertenece este usuario
+    return categoriaRepository.findCategoriasByUsuario(idUsuario);
+}
+
+@Override
+public List<sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto> listarProveedoresPorUsuario(Long idUsuario) {
+    Usuario usuario = usuarioRepository.findById(idUsuario)
+            .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", idUsuario));
+
+    Empresa empresa = usuario.getEmpresa();
+    if (empresa == null) {
+        throw new IllegalArgumentException("El usuario no está asociado a ninguna empresa");
+    }
+
+    // Obtener los proveedores de la empresa del usuario
+    List<sigiv.Backend.sigiv.Backend.entity.Proveedor> proveedores = empresa.getProveedores();
+
+    return proveedores.stream()
+            .map(sigiv.Backend.sigiv.Backend.dto.mapper.ProveedorMapper::toDto)
+            .collect(Collectors.toList());
+}
 
 }

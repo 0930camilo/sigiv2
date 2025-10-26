@@ -55,7 +55,7 @@ private List<Categoria> categorias;
 
 @OneToMany(mappedBy = "empresa", cascade = CascadeType.ALL, orphanRemoval = true)
 @JsonManagedReference("empresa-proveedores")
-private List<Proveedor> proveedor;
+private List<Proveedor> proveedores;
 
  @OneToMany(mappedBy = "empresa", cascade = CascadeType.ALL, orphanRemoval = true)
 @JsonManagedReference("empresa-nominas")
