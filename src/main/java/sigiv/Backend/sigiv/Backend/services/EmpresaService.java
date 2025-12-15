@@ -29,8 +29,6 @@ public interface EmpresaService {
     BigDecimal calcularTotalVendidoEntreFechas(Long idEmpresa, java.time.LocalDate fechaInicio, java.time.LocalDate fechaFin);
     BigDecimal calcularGananciaPorEmpresa(Long idEmpresa);
     long contarUsuariosActivos(Long idEmpresa);
-
-
     List<ProductoResponseDto> productosPorCategoria(Long idEmpresa, Long idCategoria);
     List<ProductoResponseDto> productosPorProveedor(Long idEmpresa, Long idProveedor);
     List<ProductoResponseDto> productosPorEmpresa(Long idEmpresa);
