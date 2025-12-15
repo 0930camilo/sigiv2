@@ -1,7 +1,6 @@
 package sigiv.Backend.sigiv.Backend.services;
 
 import java.util.List;
-
 import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Proveedor;
@@ -14,5 +13,7 @@ public interface ProveedorService {
     List<ProveedorResponseDto> listarPorEstado(Proveedor.Estado estado);
     void eliminarProveedor(Long id);
     ProveedorResponseDto cambiarEstado(Long id);
-
+    List<ProveedorResponseDto> buscarPorNombre(String nombre);
+    List<ProveedorResponseDto> listarPorEmpresa(Long idEmpresa);
 }
+  

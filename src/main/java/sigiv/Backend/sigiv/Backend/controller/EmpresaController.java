@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import sigiv.Backend.sigiv.Backend.dto.catego.CategoriaResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.empre.EmpresaRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.empre.EmpresaResponseDto;
+import sigiv.Backend.sigiv.Backend.dto.produc.ProductoResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.user.UsuarioResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Empresa;
@@ -105,20 +106,55 @@ public ResponseEntity<ApiResponse<EmpresaResponseDto>> cambiarEstado(@PathVariab
 }
 
 @GetMapping("/{id}/categorias")
-public ResponseEntity<ApiResponse<List<CategoriaResponseDto>>> listarCategoriasPorEmpresa(@PathVariable Long id) {
+public ResponseEntity<ApiResponse<Object>> listarCategoriasPorEmpresa(
+        @PathVariable Long id,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+
     List<CategoriaResponseDto> categorias = empresaService.categoriasEmpresa(id);
+
+    int totalElements = categorias.size();
+    int fromIndex = page * size;
+    int toIndex = Math.min(fromIndex + size, totalElements);
+
+    List<CategoriaResponseDto> paginated = categorias.subList(
+            Math.min(fromIndex, totalElements), toIndex);
+
+    var data = new java.util.HashMap<String, Object>();
+    data.put("totalPages", (int) Math.ceil((double) totalElements / size));
+    data.put("currentPage", page);
+    data.put("totalElements", totalElements);
+    data.put("categorias", paginated);
+
     return ResponseEntity.ok(
             new ApiResponse<>(true, HttpStatus.OK.value(),
-                    "Categorías de la empresa con id " + id, categorias)
+                    "Categorías de la empresa con id " + id, data)
     );
 }
 
 @GetMapping("/{id}/proveedores")
-public ResponseEntity<ApiResponse<List<ProveedorResponseDto>>> listarProveedoresPorEmpresa(@PathVariable Long id) {
+public ResponseEntity<ApiResponse<Object>> listarProveedoresPorEmpresa(
+        @PathVariable Long id,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+
     List<ProveedorResponseDto> proveedores = empresaService.proveedoresEmpresa(id);
+
+    int totalElements = proveedores.size();
+    int fromIndex = page * size;
+    int toIndex = Math.min(fromIndex + size, totalElements);
+    List<ProveedorResponseDto> paginated = proveedores.subList(
+            Math.min(fromIndex, totalElements), toIndex);
+
+    var data = new java.util.HashMap<String, Object>();
+    data.put("totalPages", (int) Math.ceil((double) totalElements / size));
+    data.put("currentPage", page);
+    data.put("totalElements", totalElements);
+    data.put("proveedores", paginated);
+
     return ResponseEntity.ok(
             new ApiResponse<>(true, HttpStatus.OK.value(),
-                    "Proveedores de la empresa con id " + id, proveedores)
+                    "Proveedores de la empresa con id " + id, data)
     );
 }
 
@@ -164,6 +200,70 @@ public ResponseEntity<ApiResponse<BigDecimal>> obtenerGananciaPorEmpresa(@PathVa
     return ResponseEntity.ok(
         new ApiResponse<>(true, HttpStatus.OK.value(),
                 "Ganancia obtenida correctamente para la empresa con id " + idEmpresa, ganancia)
+    );
+}
+
+@GetMapping("/{id}/usuarios-activos")
+public ResponseEntity<ApiResponse<Long>> contarUsuariosActivos(@PathVariable Long id) {
+    long totalActivos = empresaService.contarUsuariosActivos(id);
+    return ResponseEntity.ok(
+            new ApiResponse<>(true, HttpStatus.OK.value(),
+                    "Número de usuarios activos en la empresa con id " + id, totalActivos)
+    );
+}
+@GetMapping("/{idEmpresa}/productos/categoria/{idCategoria}")
+public ResponseEntity<ApiResponse<List<ProductoResponseDto>>> listarProductosPorCategoria(
+        @PathVariable Long idEmpresa,
+        @PathVariable Long idCategoria) {
+
+    List<ProductoResponseDto> productos = empresaService.productosPorCategoria(idEmpresa, idCategoria);
+
+    return ResponseEntity.ok(
+            new ApiResponse<>(true, HttpStatus.OK.value(),
+                    "Productos de la categoría " + idCategoria + " en la empresa " + idEmpresa,
+                    productos)
+    );
+}
+
+@GetMapping("/{idEmpresa}/productos/proveedor/{idProveedor}")
+public ResponseEntity<ApiResponse<List<ProductoResponseDto>>> listarProductosPorProveedor(
+        @PathVariable Long idEmpresa,
+        @PathVariable Long idProveedor) {
+
+    List<ProductoResponseDto> productos = empresaService.productosPorProveedor(idEmpresa, idProveedor);
+
+    return ResponseEntity.ok(
+            new ApiResponse<>(true, HttpStatus.OK.value(),
+                    "Productos del proveedor " + idProveedor + " en la empresa " + idEmpresa,
+                    productos)
+    );
+}
+
+@GetMapping("/{idEmpresa}/productos")
+public ResponseEntity<ApiResponse<Object>> listarProductosEmpresa(
+        @PathVariable Long idEmpresa,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+
+    List<ProductoResponseDto> productos = empresaService.productosPorEmpresa(idEmpresa);
+
+    int totalElements = productos.size();
+    int fromIndex = page * size;
+    int toIndex = Math.min(fromIndex + size, totalElements);
+
+    List<ProductoResponseDto> paginated = productos.subList(
+            Math.min(fromIndex, totalElements), toIndex);
+
+    var data = new java.util.HashMap<String, Object>();
+    data.put("totalPages", (int) Math.ceil((double) totalElements / size));
+    data.put("currentPage", page);
+    data.put("totalElements", totalElements);
+    data.put("productos", paginated);
+
+    return ResponseEntity.ok(
+            new ApiResponse<>(true, HttpStatus.OK.value(),
+                    "Productos de la empresa " + idEmpresa,
+                    data)
     );
 }
 

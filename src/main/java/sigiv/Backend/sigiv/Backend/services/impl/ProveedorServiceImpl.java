@@ -4,9 +4,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
+import sigiv.Backend.sigiv.Backend.dto.catego.CategoriaResponseDto;
+import sigiv.Backend.sigiv.Backend.dto.mapper.CategoriaMapper;
 import sigiv.Backend.sigiv.Backend.dto.mapper.ProveedorMapper;
 import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto;
+import sigiv.Backend.sigiv.Backend.entity.Categoria;
 import sigiv.Backend.sigiv.Backend.entity.Empresa;
 import sigiv.Backend.sigiv.Backend.entity.Proveedor;
 import sigiv.Backend.sigiv.Backend.exception.ResourceNotFoundException;
@@ -93,5 +96,24 @@ public ProveedorResponseDto cambiarEstado(Long id) {
     Proveedor actualizado = proveedorRepository.save(proveedor);
     return ProveedorMapper.toDto(actualizado);
 }
+
+@Override
+public List<ProveedorResponseDto> buscarPorNombre(String nombre) {
+    List<Proveedor> proveedores = proveedorRepository.findByNombreContainingIgnoreCase(nombre);
+    return proveedores.stream()
+            .map(ProveedorMapper::toDto)
+            .toList();
+}
+
+@Override
+public List<ProveedorResponseDto> listarPorEmpresa(Long idEmpresa) {
+
+    List<Proveedor> proveedores = proveedorRepository.findProveedoresByEmpresa(idEmpresa);
+
+    return proveedores.stream()
+            .map(ProveedorMapper::toDto)
+            .toList();
+}
+
 
 }

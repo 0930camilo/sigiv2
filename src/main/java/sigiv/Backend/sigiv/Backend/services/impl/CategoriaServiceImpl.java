@@ -95,4 +95,22 @@ public CategoriaResponseDto cambiarEstado(Long id) {
     Categoria actualizado = categoriaRepository.save(categoria);
     return CategoriaMapper.toDto(actualizado);
 }
+@Override
+public List<CategoriaResponseDto> buscarPorNombre(String nombre) {
+    return categoriaRepository.findByNombreContainingIgnoreCase(nombre)
+            .stream()
+            .map(CategoriaMapper::toDto)
+            .toList();
+}
+
+@Override
+public List<CategoriaResponseDto> listarPorEmpresa(Long idEmpresa) {
+
+    List<Categoria> categorias = categoriaRepository.findCategoriasByEmpresa(idEmpresa);
+
+    return categorias.stream()
+            .map(CategoriaMapper::toDto)
+            .toList();
+}
+
 }

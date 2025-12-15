@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 import sigiv.Backend.sigiv.Backend.dto.produc.ProductoRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.produc.ProductoResponseDto;
-
+import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Producto;
 import sigiv.Backend.sigiv.Backend.services.ProductoService;
 import sigiv.Backend.sigiv.Backend.util.ApiResponse;
@@ -96,5 +96,9 @@ public class ProductoController {
         );
 }
 
-
+@GetMapping("/buscar")
+public ResponseEntity<List<ProductoResponseDto>> buscarPorNombre(
+        @RequestParam String nombre) {
+    return ResponseEntity.ok(productoService.buscarPorNombre(nombre));
+}
 }

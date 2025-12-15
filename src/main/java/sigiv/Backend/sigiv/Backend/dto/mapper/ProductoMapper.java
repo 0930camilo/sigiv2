@@ -19,8 +19,13 @@ public class ProductoMapper {
             p.getPrecio(),
             p.getFecha(),
             p.getEstado(),
-            p.getProveedor() != null ? p.getProveedor().getIdproveedor() : null,
-            p.getCategoria() != null ? p.getCategoria().getIdcategoria() : null
+        // proveedor
+        p.getProveedor() != null ? p.getProveedor().getIdproveedor() : null,
+        p.getProveedor() != null ? p.getProveedor().getNombre() : null,
+
+        // categoría
+        p.getCategoria() != null ? p.getCategoria().getIdcategoria() : null,
+        p.getCategoria() != null ? p.getCategoria().getNombre() : null
         );
     }
 

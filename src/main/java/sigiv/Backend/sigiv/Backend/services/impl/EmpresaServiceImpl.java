@@ -4,38 +4,51 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import sigiv.Backend.sigiv.Backend.dto.mapper.CategoriaMapper;
 import sigiv.Backend.sigiv.Backend.dto.mapper.EmpresaMapper;
+import sigiv.Backend.sigiv.Backend.dto.mapper.ProductoMapper;
 import sigiv.Backend.sigiv.Backend.dto.mapper.ProveedorMapper;
 import sigiv.Backend.sigiv.Backend.dto.mapper.UsuarioMapper;
+import sigiv.Backend.sigiv.Backend.dto.produc.ProductoResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.user.UsuarioResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.catego.CategoriaResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.empre.EmpresaRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.empre.EmpresaResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Empresa;
+import sigiv.Backend.sigiv.Backend.entity.Producto;
 import sigiv.Backend.sigiv.Backend.exception.ResourceNotFoundException;
 import sigiv.Backend.sigiv.Backend.repository.EmpresaRepository;
+import sigiv.Backend.sigiv.Backend.repository.ProductoRepository;
 import sigiv.Backend.sigiv.Backend.repository.VentasRepository;
 import sigiv.Backend.sigiv.Backend.services.EmpresaService;
 import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto;
-import sigiv.Backend.sigiv.Backend.entity.Proveedor;
-import sigiv.Backend.sigiv.Backend.repository.ProveedorRepository;
+
 
 @Service
 @RequiredArgsConstructor
 public class EmpresaServiceImpl implements EmpresaService {
 
-    private final EmpresaRepository empresaRepository;
+private final EmpresaRepository empresaRepository;
+
+    @Autowired
+private final ProductoRepository productoRepository;
+
+
 
     private final VentasRepository ventasRepository;
     private final PasswordEncoder passwordEncoder;
 
+
+    
     @Override
     public EmpresaResponseDto crearEmpresa(EmpresaRequestDto dto) {
         Empresa empresa = EmpresaMapper.toEntityForCreate(dto, new Empresa());
@@ -162,4 +175,101 @@ public BigDecimal calcularTotalVendidoEntreFechas(Long idEmpresa, LocalDate fech
 public BigDecimal calcularGananciaPorEmpresa(Long idEmpresa) {
     return ventasRepository.gananciaPorEmpresa(idEmpresa);
 }
+
+@Override
+public long contarUsuariosActivos(Long idEmpresa) {
+    Empresa empresa = empresaRepository.findById(idEmpresa)
+            .orElseThrow(() -> new ResourceNotFoundException("Empresa", "id", idEmpresa));
+
+    return empresa.getUsuarios()
+            .stream()
+            .filter(usuario -> usuario.getEstado() == sigiv.Backend.sigiv.Backend.entity.Usuario.Estado.Activo)
+            .count();
+}
+
+
+@Override
+public List<ProductoResponseDto> productosPorCategoria(Long idEmpresa, Long idCategoria) {
+
+    empresaRepository.findById(idEmpresa)
+            .orElseThrow(() -> new ResourceNotFoundException("Empresa", "id", idEmpresa));
+
+    List<Producto> productos = productoRepository.findByCategoria_Idcategoria(idCategoria)
+            .stream()
+            .filter(p -> Optional.ofNullable(p)
+                    .map(Producto::getCategoria)
+                    .map(c -> c.getEmpresa())
+                    .map(e -> e.getIdEmpresa())
+                    .map(id -> id.equals(idEmpresa))
+                    .orElse(false)
+            )
+            .collect(Collectors.toList());
+
+    return productos.stream()
+            .map(ProductoMapper::toDto)
+            .collect(Collectors.toList());
+}
+@Override
+public List<ProductoResponseDto> productosPorProveedor(Long idEmpresa, Long idProveedor) {
+
+    empresaRepository.findById(idEmpresa)
+            .orElseThrow(() -> new ResourceNotFoundException("Empresa", "id", idEmpresa));
+
+    List<Producto> productos = productoRepository.findByProveedor_Idproveedor(idProveedor)
+            .stream()
+            .filter(p -> Optional.ofNullable(p)
+                    .map(Producto::getProveedor)
+                    .map(prov -> prov.getEmpresa())
+                    .map(emp -> emp.getIdEmpresa())
+                    .map(id -> id.equals(idEmpresa))
+                    .orElse(false)
+            )
+            .collect(Collectors.toList());
+
+    return productos.stream()
+            .map(ProductoMapper::toDto)
+            .collect(Collectors.toList());
+}
+
+
+@Override
+public List<ProductoResponseDto> productosPorEmpresa(Long idEmpresa) {
+
+    empresaRepository.findById(idEmpresa)
+            .orElseThrow(() -> new ResourceNotFoundException("Empresa", "id", idEmpresa));
+
+    // Productos asociados por categoría
+    List<Producto> porCategoria = productoRepository.findAll()
+            .stream()
+            .filter(p -> Optional.ofNullable(p)
+                    .map(Producto::getCategoria)
+                    .map(c -> c.getEmpresa())
+                    .map(e -> e.getIdEmpresa())
+                    .map(id -> id.equals(idEmpresa))
+                    .orElse(false)
+            )
+            .collect(Collectors.toList());
+
+    // Productos asociados por proveedor
+    List<Producto> porProveedor = productoRepository.findAll()
+            .stream()
+            .filter(p -> Optional.ofNullable(p)
+                    .map(Producto::getProveedor)
+                    .map(prov -> prov.getEmpresa())
+                    .map(emp -> emp.getIdEmpresa())
+                    .map(id -> id.equals(idEmpresa))
+                    .orElse(false)
+            )
+            .collect(Collectors.toList());
+
+    // Unimos sin duplicados
+    List<Producto> productos = Stream.concat(porCategoria.stream(), porProveedor.stream())
+            .distinct()
+            .collect(Collectors.toList());
+
+    return productos.stream()
+            .map(ProductoMapper::toDto)
+            .collect(Collectors.toList());
+}
+
 }

@@ -15,7 +15,6 @@ import sigiv.Backend.sigiv.Backend.entity.Producto;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductoResponseDto {
-
     private Long idProducto;
     private String nombre;
     private String descripcion;
@@ -24,6 +23,11 @@ public class ProductoResponseDto {
     private BigDecimal precio;
     private LocalDateTime fecha;
     private Producto.Estado estado;
+
     private Long proveedorId;
+    private String proveedorNombre;   // <<— AGREGAS ESTO
+
     private Long categoriaId;
+    private String categoriaNombre;   // <<— AGREGAS ESTO
 }
+

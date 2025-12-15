@@ -14,5 +14,7 @@ public interface CategoriaService {
     List<CategoriaResponseDto> listarPorEstado(Categoria.Estado estado);
     void eliminarCategoria(Long id);
     CategoriaResponseDto cambiarEstado(Long id);
+   List<CategoriaResponseDto> buscarPorNombre(String nombre);
+List<CategoriaResponseDto> listarPorEmpresa(Long idEmpresa);
 
 }

@@ -95,5 +95,17 @@ public class CategoriaController {
         );
 }
 
+ // 🔥 **ENDPOINT FALTANTE (igual que proveedores)**
+    @GetMapping("/buscar")
+    public ResponseEntity<List<CategoriaResponseDto>> buscarPorNombre(
+            @RequestParam String nombre) {
+        return ResponseEntity.ok(categoriaService.buscarPorNombre(nombre));
+    }
+
+    @GetMapping("/empresa/{idEmpresa}")
+public ResponseEntity<List<CategoriaResponseDto>> listarPorEmpresa(@PathVariable Long idEmpresa) {
+    List<CategoriaResponseDto> respuesta = categoriaService.listarPorEmpresa(idEmpresa);
+    return ResponseEntity.ok(respuesta);
+} 
 
 }

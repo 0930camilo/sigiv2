@@ -119,4 +119,11 @@ public class ProductoServiceImpl implements ProductoService {
                 .map(ProductoMapper::toDto)
                 .collect(Collectors.toList());
     }
+    @Override
+    public List<ProductoResponseDto> buscarPorNombre(String nombre) {
+        List<Producto> productos = productoRepository.findByNombreContainingIgnoreCase(nombre);
+        return productos.stream()
+                .map(ProductoMapper::toDto)
+                .collect(Collectors.toList());
+    }
 }

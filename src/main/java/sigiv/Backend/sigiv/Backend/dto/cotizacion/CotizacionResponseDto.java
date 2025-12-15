@@ -15,11 +15,14 @@ import sigiv.Backend.sigiv.Backend.dto.detalleCotizacion.DetalleCotizacionRespon
 @NoArgsConstructor
 @AllArgsConstructor
 public class CotizacionResponseDto {
+
     private Long idcotizacion;
     private LocalDateTime fecha;
     private String nombreCliente;
     private String telefonoCliente;
     private BigDecimal total;
+
     private String nombreUsuario;
+
     private List<DetalleCotizacionResponseDto> detalles;
 }

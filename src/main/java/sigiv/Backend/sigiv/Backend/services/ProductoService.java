@@ -16,5 +16,6 @@ public interface ProductoService {
     List<ProductoResponseDto> listarPorEstado(Producto.Estado estado);
     void eliminarProducto(Long id);
     ProductoResponseDto cambiarEstado(Long id);
-
+    List<ProductoResponseDto> buscarPorNombre(String nombre);
+    
 }

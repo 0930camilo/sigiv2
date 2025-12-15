@@ -4,7 +4,6 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import lombok.RequiredArgsConstructor;
 import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto;
@@ -94,6 +93,19 @@ public class ProveedorController {
                         "Estado del proveedor actualizado automáticamente", actualizado)
         );
 }
+
+@GetMapping("/buscar")
+public ResponseEntity<List<ProveedorResponseDto>> buscarPorNombre(
+        @RequestParam String nombre) {
+    return ResponseEntity.ok(proveedorService.buscarPorNombre(nombre));
+}
+
+
+    @GetMapping("/empresa/{idEmpresa}")
+public ResponseEntity<List<ProveedorResponseDto>> listarPorEmpresa(@PathVariable Long idEmpresa) {
+    List<ProveedorResponseDto> respuesta = proveedorService.listarPorEmpresa(idEmpresa);
+    return ResponseEntity.ok(respuesta);
+} 
 
 
 }
