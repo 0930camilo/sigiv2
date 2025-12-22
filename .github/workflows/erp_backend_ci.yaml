@@ -1,0 +1,41 @@
+name: erp_backend_ci
+
+on:
+  push:
+    branches:
+      - camilo
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-backend:
+    name: CI SIGIV ERP Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: maven
+
+      - name: Verificar entorno
+        run: |
+          java -version
+          mvn -version
+
+      - name: Compilar
+        run: mvn clean compile
+
+      - name: Ejecutar tests (profile test)
+        run: mvn test -Dspring.profiles.active=test
+
+      - name: Empaquetar JAR
+        run: mvn package -DskipTests
