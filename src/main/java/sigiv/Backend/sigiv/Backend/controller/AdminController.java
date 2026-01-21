@@ -93,5 +93,5 @@ public class AdminController {
                     Empresa actualizada = empresaRepository.save(empresa);
                     return ResponseEntity.ok(actualizada);
                 }).orElse(ResponseEntity.notFound().build());
-    }
+    }   
 }
