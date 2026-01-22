@@ -1,41 +1,59 @@
-name: erp_backend_ci
+name: CI - SIGIV Backend + Docker
 
 on:
   push:
-    branches:
-      - camilo
-      - main
+    branches: [ "main", "master", "camilo" ]
   pull_request:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [ "main", "master" ]
 
 jobs:
-  build-backend:
-    name: CI SIGIV ERP Backend
+  build:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: sigiv
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
-      - name: Checkout código
+      # 1️⃣ Descargar código
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configurar Java 17
+      # 2️⃣ Configurar Java
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
           cache: maven
 
-      - name: Verificar entorno
+      # 3️⃣ Esperar a MySQL
+      - name: Wait for MySQL
         run: |
-          java -version
-          mvn -version
+          for i in {1..20}; do
+            mysqladmin ping -h 127.0.0.1 -uroot -proot && break
+            sleep 3
+          done
 
-      - name: Compilar
-        run: mvn clean compile
+      # 4️⃣ Build + tests
+      - name: Build and run tests
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/sigiv_Backend
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: Allweneedislo.12
+        run: mvn clean verify
 
-      - name: Ejecutar tests (profile test)
-        run: mvn test -Dspring.profiles.active=test
-
-      - name: Empaquetar JAR
-        run: mvn package -DskipTests
+      # 5️⃣ Construir imagen Docker
+      - name: Build Docker image
+        run: |
+          docker build -t sigiv-backend:ci .
