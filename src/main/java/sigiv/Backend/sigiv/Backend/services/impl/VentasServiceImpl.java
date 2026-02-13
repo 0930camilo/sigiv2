@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -163,4 +165,19 @@ public class VentasServiceImpl implements VentasService {
         }
         ventasRepository.deleteById(id);
     }
+
+ @Override
+public Page<VentasResponseDto> listarVentasPorEmpresaPaginado(
+        Long empresaId,
+        int page,
+        int size
+) {
+
+    Page<Ventas> ventasPage = ventasRepository.findVentasByEmpresa(
+            empresaId,
+            PageRequest.of(page, size)
+    );
+
+    return ventasPage.map(ventasMapper::toDto);
+}
 }

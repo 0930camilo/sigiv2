@@ -1,7 +1,10 @@
 package sigiv.Backend.sigiv.Backend.repository;
 
 import java.math.BigDecimal;
+import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -75,5 +78,17 @@ BigDecimal totalVendidoPorEmpresaEntreFechas(
     """)
     BigDecimal gananciaPorEmpresa(@Param("idEmpresa") Long idEmpresa);
 
+
+
+  @Query("""
+    SELECT v
+    FROM Ventas v
+    JOIN v.usuario u
+    WHERE u.empresa.idEmpresa = :empresaId
+""")
+Page<Ventas> findVentasByEmpresa(
+        @Param("empresaId") Long empresaId,
+        Pageable pageable
+);
 
 }

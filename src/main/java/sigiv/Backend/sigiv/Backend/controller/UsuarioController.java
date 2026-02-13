@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
+import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.user.UsuarioRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.user.UsuarioResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Categoria;
@@ -181,5 +182,12 @@ public ResponseEntity<ApiResponse<List<sigiv.Backend.sigiv.Backend.dto.provee.Pr
             )
     );
 }
+
+@GetMapping("/buscar")
+public ResponseEntity<List<UsuarioResponseDto>> buscarPorNombre(
+        @RequestParam String nombres) {
+    return ResponseEntity.ok(usuarioService.buscarPorNombre(nombres));
+}
+
 
 }

@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 
+import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.user.UsuarioRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.user.UsuarioResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Usuario;
@@ -18,6 +19,9 @@ public interface UsuarioService {
     void eliminarUsuario(Long id);
     UsuarioResponseDto cambiarEstado(Long id);
     Page<UsuarioResponseDto> listarUsuariosPorEmpresa(Long empresaId, int page, int size);
+
+  List<UsuarioResponseDto> buscarPorNombre(String nombres);
+
 
 
 BigDecimal calcularTotalVendido(Long idUsuario);

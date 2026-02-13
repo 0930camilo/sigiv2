@@ -15,6 +15,7 @@ public interface ProveedorRepository extends JpaRepository<Proveedor, Long> {
 
      List<Proveedor> findByNombreContainingIgnoreCase(String nombre);
 
+    
 
 
       @Query("""

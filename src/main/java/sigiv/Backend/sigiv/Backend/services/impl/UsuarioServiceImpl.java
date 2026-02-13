@@ -14,10 +14,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import sigiv.Backend.sigiv.Backend.dto.mapper.ProveedorMapper;
 import sigiv.Backend.sigiv.Backend.dto.mapper.UsuarioMapper;
+import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.user.UsuarioRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.user.UsuarioResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Empresa;
+import sigiv.Backend.sigiv.Backend.entity.Proveedor;
 import sigiv.Backend.sigiv.Backend.entity.Usuario;
 import sigiv.Backend.sigiv.Backend.exception.ResourceNotFoundException;
 import sigiv.Backend.sigiv.Backend.repository.EmpresaRepository;
@@ -171,6 +174,14 @@ public List<sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto> listarP
     return proveedores.stream()
             .map(sigiv.Backend.sigiv.Backend.dto.mapper.ProveedorMapper::toDto)
             .collect(Collectors.toList());
+}
+
+@Override
+public List<UsuarioResponseDto> buscarPorNombre(String nombres) {
+    List<Usuario> usuarios = usuarioRepository.findByNombresContainingIgnoreCase(nombres);
+    return usuarios.stream()
+            .map(UsuarioMapper::toDto)
+            .toList();
 }
 
 }
