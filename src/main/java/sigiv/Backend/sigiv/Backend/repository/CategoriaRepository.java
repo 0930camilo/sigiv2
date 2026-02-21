@@ -1,44 +1,30 @@
 package sigiv.Backend.sigiv.Backend.repository;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-
-
 import sigiv.Backend.sigiv.Backend.entity.Categoria;
 
+public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
 
+    Page<Categoria> findByEmpresa_IdEmpresa(Long empresaId, Pageable pageable);
 
-public interface CategoriaRepository  extends JpaRepository<Categoria, Long> {
+    Page<Categoria> findByEmpresa_IdEmpresaAndEstado(
+            Long empresaId,
+            Categoria.Estado estado,
+            Pageable pageable
+    );
 
-   List<Categoria> findByEstado(Categoria.Estado estado);
-   List<Categoria> findByNombreContainingIgnoreCase(String nombre);
+    Page<Categoria> findByEmpresa_IdEmpresaAndNombreContainingIgnoreCase(
+            Long empresaId,
+            String nombre,
+            Pageable pageable
+    );
 
-   
-     // Obtiene todas las categorías de la empresa a la que pertenece un usuario
-    @Query("""
-        SELECT c
-        FROM Categoria c
-        WHERE c.empresa.idEmpresa = (
-            SELECT u.empresa.idEmpresa
-            FROM Usuario u
-            WHERE u.idUsuario = :idUsuario
-        )
-    """)
-
-    List<Categoria> findCategoriasByUsuario(@Param("idUsuario") Long idUsuario);
-
-
-
-    @Query("""
-    SELECT c
-    FROM Categoria c
-    WHERE c.empresa.idEmpresa = :idEmpresa
-""")
-List<Categoria> findCategoriasByEmpresa(@Param("idEmpresa") Long idEmpresa);
-
-   
-
+    Page<Categoria> findByEmpresa_IdEmpresaAndEstadoAndNombreContainingIgnoreCase(
+            Long empresaId,
+            Categoria.Estado estado,
+            String nombre,
+            Pageable pageable
+    );
 }

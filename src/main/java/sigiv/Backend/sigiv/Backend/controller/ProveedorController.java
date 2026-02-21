@@ -1,6 +1,10 @@
 package sigiv.Backend.sigiv.Backend.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -45,25 +49,7 @@ public class ProveedorController {
         );
     }
 
-    @GetMapping("/list-proveedor-status")
-    public ResponseEntity<ApiResponse<List<ProveedorResponseDto>>> listarPorEstado(
-            @RequestParam(required = false) Proveedor.Estado estado) {
-
-        List<ProveedorResponseDto> proveedores;
-        String message;
-
-        if (estado != null) {
-            proveedores = proveedorService.listarPorEstado(estado);
-            message = "Proveedores listados por estado: " + estado;
-        } else {
-            proveedores = proveedorService.listarProveedores();
-            message = "Todos los proveedores listados";
-        }
-
-        return ResponseEntity.ok(
-                new ApiResponse<>(true, HttpStatus.OK.value(), message, proveedores)
-        );
-    }
+  
 
     @PutMapping("/update-proveedor/{id}")
     public ResponseEntity<ApiResponse<ProveedorResponseDto>> actualizar(
@@ -85,27 +71,44 @@ public class ProveedorController {
         );
     }
 
-    @PutMapping("/cambiar-estado/{id}")
-    public ResponseEntity<ApiResponse<ProveedorResponseDto>> cambiarEstado(@PathVariable Long id) {
-        ProveedorResponseDto actualizado = proveedorService.cambiarEstado(id);
+ 
+
+
+
+
+    @GetMapping("/empresa/{empresaId}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> listarPorEmpresa(
+            @PathVariable Long empresaId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Proveedor.Estado estado,
+            @RequestParam(required = false) String nombre
+    ) {
+
+        Page<ProveedorResponseDto> proveedoresPage =
+                proveedorService.listarProveedoresPorEmpresa(
+                        empresaId,
+                        page,
+                        size,
+                        estado,
+                        nombre
+                );
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("proveedores", proveedoresPage.getContent());
+        data.put("totalElements", proveedoresPage.getTotalElements());
+        data.put("totalPages", proveedoresPage.getTotalPages());
+        data.put("currentPage", proveedoresPage.getNumber());
+
         return ResponseEntity.ok(
-                new ApiResponse<>(true, HttpStatus.OK.value(),
-                        "Estado del proveedor actualizado automáticamente", actualizado)
+                new ApiResponse<>(
+                        true,
+                        HttpStatus.OK.value(),
+                        "Proveedores de la empresa " + empresaId + " listados correctamente",
+                        data
+                )
         );
-}
-
-@GetMapping("/buscar")
-public ResponseEntity<List<ProveedorResponseDto>> buscarPorNombre(
-        @RequestParam String nombre) {
-    return ResponseEntity.ok(proveedorService.buscarPorNombre(nombre));
+    }
 }
 
 
-    @GetMapping("/empresa/{idEmpresa}")
-public ResponseEntity<List<ProveedorResponseDto>> listarPorEmpresa(@PathVariable Long idEmpresa) {
-    List<ProveedorResponseDto> respuesta = proveedorService.listarPorEmpresa(idEmpresa);
-    return ResponseEntity.ok(respuesta);
-} 
-
-
-}

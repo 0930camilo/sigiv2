@@ -91,4 +91,13 @@ Page<Ventas> findVentasByEmpresa(
         Pageable pageable
 );
 
+Page<Ventas> findByIdventaAndUsuarioEmpresaIdEmpresa(
+        Long idventa,
+        Long empresaId,
+        Pageable pageable
+);
+
+
+
+
 }

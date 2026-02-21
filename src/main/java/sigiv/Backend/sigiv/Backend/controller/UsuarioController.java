@@ -3,7 +3,6 @@ package sigiv.Backend.sigiv.Backend.controller;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.format.annotation.DateTimeFormat;
@@ -13,10 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
-import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.user.UsuarioRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.user.UsuarioResponseDto;
-import sigiv.Backend.sigiv.Backend.entity.Categoria;
 import sigiv.Backend.sigiv.Backend.entity.Usuario;
 import sigiv.Backend.sigiv.Backend.services.UsuarioService;
 import sigiv.Backend.sigiv.Backend.util.ApiResponse;
@@ -24,6 +21,7 @@ import sigiv.Backend.sigiv.Backend.util.ApiResponse;
 @RestController
 @RequestMapping("/usuarios")
 @RequiredArgsConstructor
+
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
@@ -44,25 +42,23 @@ public class UsuarioController {
                         "Usuario encontrado", usuario));
     }
 
-    @GetMapping("/list-users")
-    public ResponseEntity<ApiResponse<List<UsuarioResponseDto>>> listar() {
-        List<UsuarioResponseDto> usuarios = usuarioService.listarUsuarios();
-        return ResponseEntity.ok(
-                new ApiResponse<>(true, HttpStatus.OK.value(),
-                        "Todos los usuarios listados", usuarios));
-    }
+   
 
     @GetMapping("/empresa/{empresaId}/list-users")
     public ResponseEntity<ApiResponse<Map<String, Object>>> listarPorEmpresa(
             @PathVariable Long empresaId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Usuario.Estado estado,
+            @RequestParam(required = false) String nombres
+        ) {
 
-        Page<UsuarioResponseDto> usuariosPage = usuarioService.listarUsuariosPorEmpresa(empresaId, page, size);
+        Page<UsuarioResponseDto> usuariosPage = usuarioService.listarUsuariosPorEmpresa(empresaId, page, size, estado, nombres);
 
         Map<String, Object> data = new HashMap<>();
         data.put("usuarios", usuariosPage.getContent());
         data.put("totalElements", usuariosPage.getTotalElements());
+        
         data.put("totalPages", usuariosPage.getTotalPages());
         data.put("currentPage", usuariosPage.getNumber());
 
@@ -74,25 +70,7 @@ public class UsuarioController {
                         data));
     }
 
-    @GetMapping("/list-user-status")
-    public ResponseEntity<ApiResponse<List<UsuarioResponseDto>>> listarPorEstado(
-            @RequestParam(required = false) Usuario.Estado estado) {
-
-        List<UsuarioResponseDto> usuarios;
-        String message;
-
-        if (estado != null) {
-            usuarios = usuarioService.listarPorEstado(estado);
-            message = "Usuarios listados por estado: " + estado;
-        } else {
-            usuarios = usuarioService.listarUsuarios();
-            message = "Todos los usuarios listados";
-        }
-
-        return ResponseEntity.ok(
-                new ApiResponse<>(true, HttpStatus.OK.value(), message, usuarios));
-    }
-
+   
     @PutMapping("/update-user/{id}")
     public ResponseEntity<ApiResponse<UsuarioResponseDto>> actualizar(
             @PathVariable Long id,
@@ -111,13 +89,7 @@ public class UsuarioController {
                         "Usuario eliminado correctamente", null));
     }
 
-    @PutMapping("/cambiar-estado/{id}")
-    public ResponseEntity<ApiResponse<UsuarioResponseDto>> cambiarEstado(@PathVariable Long id) {
-        UsuarioResponseDto actualizado = usuarioService.cambiarEstado(id);
-        return ResponseEntity.ok(
-                new ApiResponse<>(true, HttpStatus.OK.value(),
-                        "Estado del usuario actualizado automáticamente", actualizado));
-    }
+   
 
 
 @GetMapping("/{id}/total-vendido")
@@ -152,42 +124,10 @@ public ResponseEntity<ApiResponse<BigDecimal>> obtenerGananciaPorUsuario(@PathVa
                 "Ganancia obtenida correctamente para el usuario con id " + idUsuario, ganancia)
     );
 }
-@GetMapping("/{idUsuario}/categorias")
-public ResponseEntity<ApiResponse<List<Categoria>>> listarCategoriasPorUsuario(@PathVariable Long idUsuario) {
-    List<Categoria> categorias = usuarioService.listarCategoriasPorUsuario(idUsuario);
-
-    return ResponseEntity.ok(
-        new ApiResponse<>(
-            true,
-            HttpStatus.OK.value(),
-            "Categorías obtenidas correctamente",
-            categorias
-        )
-    );
-}
 
 
-@GetMapping("/{idUsuario}/proveedores")
-public ResponseEntity<ApiResponse<List<sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto>>> listarProveedoresPorUsuario(
-        @PathVariable Long idUsuario) {
 
-    List<sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto> proveedores = usuarioService.listarProveedoresPorUsuario(idUsuario);
 
-    return ResponseEntity.ok(
-            new ApiResponse<>(
-                    true,
-                    HttpStatus.OK.value(),
-                    "Proveedores obtenidos correctamente para el usuario con id " + idUsuario,
-                    proveedores
-            )
-    );
-}
-
-@GetMapping("/buscar")
-public ResponseEntity<List<UsuarioResponseDto>> buscarPorNombre(
-        @RequestParam String nombres) {
-    return ResponseEntity.ok(usuarioService.buscarPorNombre(nombres));
-}
 
 
 }

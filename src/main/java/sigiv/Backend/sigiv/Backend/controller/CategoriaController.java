@@ -1,6 +1,9 @@
 package sigiv.Backend.sigiv.Backend.controller;
 
-import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,34 +40,7 @@ public class CategoriaController {
         );
     }
 
-    @GetMapping("/list-categorias")
-    public ResponseEntity<ApiResponse<List<CategoriaResponseDto>>> listar() {
-        List<CategoriaResponseDto> categorias = categoriaService.listarCategorias();
-        return ResponseEntity.ok(
-                new ApiResponse<>(true, HttpStatus.OK.value(),
-                        "Todas las categorias listadas", categorias)
-        );
-    }
-
-    @GetMapping("/list-categoria-status")
-    public ResponseEntity<ApiResponse<List<CategoriaResponseDto>>> listarPorEstado(
-            @RequestParam(required = false) Categoria.Estado estado) {
-
-        List<CategoriaResponseDto> categorias;
-        String message;
-
-        if (estado != null) {
-            categorias = categoriaService.listarPorEstado(estado);
-            message = "Categorias listadas por estado: " + estado;
-        } else {
-            categorias = categoriaService.listarCategorias();
-            message = "Todas las categorias listadas";
-        }
-
-        return ResponseEntity.ok(
-                new ApiResponse<>(true, HttpStatus.OK.value(), message, categorias)
-        );
-    }
+  
 
     @PutMapping("/update-categoria/{id}")
     public ResponseEntity<ApiResponse<CategoriaResponseDto>> actualizar(
@@ -86,26 +62,46 @@ public class CategoriaController {
         );
     }
 
-    @PutMapping("/cambiar-estado/{id}")
-    public ResponseEntity<ApiResponse<CategoriaResponseDto>> cambiarEstado(@PathVariable Long id) {
-        CategoriaResponseDto actualizado = categoriaService.cambiarEstado(id);
-        return ResponseEntity.ok(
-                new ApiResponse<>(true, HttpStatus.OK.value(),
-                        "Estado de la categoria actualizado automáticamente", actualizado)
-        );
+   
+
+
+
+ 
+
+
+
+    @GetMapping("/empresa/{empresaId}")
+public ResponseEntity<ApiResponse<Map<String, Object>>> listarPorEmpresa(
+        @PathVariable Long empresaId,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(required = false) Categoria.Estado estado,
+        @RequestParam(required = false) String nombre
+) {
+
+    Page<CategoriaResponseDto> categoriasPage =
+            categoriaService.listarCategoriasPorEmpresa(
+                    empresaId,
+                    page,
+                    size,
+                    estado,
+                    nombre
+            );
+
+    Map<String, Object> data = new HashMap<>();
+    data.put("categorias", categoriasPage.getContent());
+    data.put("totalElements", categoriasPage.getTotalElements());
+    data.put("totalPages", categoriasPage.getTotalPages());
+    data.put("currentPage", categoriasPage.getNumber());
+
+    return ResponseEntity.ok(
+            new ApiResponse<>(
+                    true,
+                    HttpStatus.OK.value(),
+                    "Categorias de la empresa " + empresaId + " listadas correctamente",
+                    data
+            )
+    );
 }
-
- // 🔥 **ENDPOINT FALTANTE (igual que proveedores)**
-    @GetMapping("/buscar")
-    public ResponseEntity<List<CategoriaResponseDto>> buscarPorNombre(
-            @RequestParam String nombre) {
-        return ResponseEntity.ok(categoriaService.buscarPorNombre(nombre));
-    }
-
-    @GetMapping("/empresa/{idEmpresa}")
-public ResponseEntity<List<CategoriaResponseDto>> listarPorEmpresa(@PathVariable Long idEmpresa) {
-    List<CategoriaResponseDto> respuesta = categoriaService.listarPorEmpresa(idEmpresa);
-    return ResponseEntity.ok(respuesta);
-} 
 
 }

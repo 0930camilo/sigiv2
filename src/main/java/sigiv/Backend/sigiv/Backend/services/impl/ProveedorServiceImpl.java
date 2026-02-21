@@ -2,14 +2,16 @@ package sigiv.Backend.sigiv.Backend.services.impl;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
-import sigiv.Backend.sigiv.Backend.dto.catego.CategoriaResponseDto;
-import sigiv.Backend.sigiv.Backend.dto.mapper.CategoriaMapper;
 import sigiv.Backend.sigiv.Backend.dto.mapper.ProveedorMapper;
 import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto;
-import sigiv.Backend.sigiv.Backend.entity.Categoria;
 import sigiv.Backend.sigiv.Backend.entity.Empresa;
 import sigiv.Backend.sigiv.Backend.entity.Proveedor;
 import sigiv.Backend.sigiv.Backend.exception.ResourceNotFoundException;
@@ -65,13 +67,7 @@ public class ProveedorServiceImpl implements ProveedorService {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public List<ProveedorResponseDto> listarPorEstado(Proveedor.Estado estado) {
-        return proveedorRepository.findByEstado(estado)
-                .stream()
-                .map(ProveedorMapper::toDto)
-                .collect(Collectors.toList());
-    }
+
 
     @Override
     public void eliminarProveedor(Long id) {
@@ -81,38 +77,49 @@ public class ProveedorServiceImpl implements ProveedorService {
         proveedorRepository.deleteById(id);
     }
 
-     @Override
-public ProveedorResponseDto cambiarEstado(Long id) {
-    Proveedor proveedor = proveedorRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Proveedor", "id", id));
 
-    // Cambiar estado automáticamente
-    if (proveedor.getEstado() == Proveedor.Estado.Activo) {
-        proveedor.setEstado(Proveedor.Estado.Inactivo);
+
+
+@Override
+public Page<ProveedorResponseDto> listarProveedoresPorEmpresa(
+        Long empresaId,
+        int page,
+        int size,
+        Proveedor.Estado estado,
+        String nombre
+) {
+
+    Pageable pageable = PageRequest.of(page, size, Sort.by("idproveedor").ascending());
+
+    Page<Proveedor> proveedoresPage;
+
+    boolean tieneNombre = nombre != null && !nombre.trim().isEmpty();
+
+    if (estado != null && tieneNombre) {
+
+        proveedoresPage = proveedorRepository
+                .findByEmpresa_IdEmpresaAndEstadoAndNombreContainingIgnoreCase(
+                        empresaId, estado, nombre, pageable);
+
+    } else if (estado != null) {
+
+        proveedoresPage = proveedorRepository
+                .findByEmpresa_IdEmpresaAndEstado(
+                        empresaId, estado, pageable);
+
+    } else if (tieneNombre) {
+
+        proveedoresPage = proveedorRepository
+                .findByEmpresa_IdEmpresaAndNombreContainingIgnoreCase(
+                        empresaId, nombre, pageable);
+
     } else {
-        proveedor.setEstado(Proveedor.Estado.Activo);
+
+        proveedoresPage = proveedorRepository
+                .findByEmpresa_IdEmpresa(empresaId, pageable);
     }
 
-    Proveedor actualizado = proveedorRepository.save(proveedor);
-    return ProveedorMapper.toDto(actualizado);
-}
-
-@Override
-public List<ProveedorResponseDto> buscarPorNombre(String nombre) {
-    List<Proveedor> proveedores = proveedorRepository.findByNombreContainingIgnoreCase(nombre);
-    return proveedores.stream()
-            .map(ProveedorMapper::toDto)
-            .toList();
-}
-
-@Override
-public List<ProveedorResponseDto> listarPorEmpresa(Long idEmpresa) {
-
-    List<Proveedor> proveedores = proveedorRepository.findProveedoresByEmpresa(idEmpresa);
-
-    return proveedores.stream()
-            .map(ProveedorMapper::toDto)
-            .toList();
+    return proveedoresPage.map(ProveedorMapper::toDto);
 }
 
 

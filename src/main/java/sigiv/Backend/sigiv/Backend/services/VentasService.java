@@ -25,4 +25,16 @@ public interface VentasService {
             int page,
             int size
     );
+
+       // ✅ AGREGA ESTO
+    byte[] generarFacturaPdf(Long id);
+
+
+    Page<VentasResponseDto> buscarVentaPorIdYEmpresa(
+        Long empresaId,
+        Long idVenta,
+        int page,
+        int size
+);
+
 }

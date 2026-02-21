@@ -3,9 +3,6 @@ package sigiv.Backend.sigiv.Backend.services.impl;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -14,20 +11,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
-import sigiv.Backend.sigiv.Backend.dto.mapper.ProveedorMapper;
+
 import sigiv.Backend.sigiv.Backend.dto.mapper.UsuarioMapper;
-import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.user.UsuarioRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.user.UsuarioResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Empresa;
-import sigiv.Backend.sigiv.Backend.entity.Proveedor;
 import sigiv.Backend.sigiv.Backend.entity.Usuario;
 import sigiv.Backend.sigiv.Backend.exception.ResourceNotFoundException;
 import sigiv.Backend.sigiv.Backend.repository.EmpresaRepository;
 import sigiv.Backend.sigiv.Backend.repository.UsuarioRepository;
 import sigiv.Backend.sigiv.Backend.repository.VentasRepository;
 import sigiv.Backend.sigiv.Backend.services.UsuarioService;
-import sigiv.Backend.sigiv.Backend.repository.CategoriaRepository;
+
 
 @Service
 @RequiredArgsConstructor
@@ -35,8 +30,8 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final EmpresaRepository empresaRepository;
     private final VentasRepository ventasRepository;
-    private final CategoriaRepository categoriaRepository;
     private final PasswordEncoder passwordEncoder;
+
 
     @Override
     public UsuarioResponseDto crearUsuario(UsuarioRequestDto dto) {
@@ -50,6 +45,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario guardado = usuarioRepository.save(usuario);
         return UsuarioMapper.toDto(guardado);
     }
+
 
     @Override
     public UsuarioResponseDto obtenerPorId(Long id) {
@@ -74,20 +70,9 @@ public class UsuarioServiceImpl implements UsuarioService {
         return UsuarioMapper.toDto(actualizado);
     }
 
-    @Override
-    public List<UsuarioResponseDto> listarUsuarios() {
-        return usuarioRepository.findAll()
-                .stream().map(UsuarioMapper::toDto)
-                .collect(Collectors.toList());
-    }
+  
 
-    @Override
-    public List<UsuarioResponseDto> listarPorEstado(Usuario.Estado estado) {
-        return usuarioRepository.findByEstado(estado)
-                .stream()
-                .map(UsuarioMapper::toDto)
-                .collect(Collectors.toList());
-    }
+
 
     @Override
     public void eliminarUsuario(Long id) {
@@ -97,21 +82,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuarioRepository.deleteById(id);
     }
 
-    @Override
-    public UsuarioResponseDto cambiarEstado(Long id) {
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
-
-        // Cambiar estado automáticamente
-        if (usuario.getEstado() == Usuario.Estado.Activo) {
-            usuario.setEstado(Usuario.Estado.Inactivo);
-        } else {
-            usuario.setEstado(Usuario.Estado.Activo);
-        }
-
-    Usuario actualizado = usuarioRepository.save(usuario);
-    return UsuarioMapper.toDto(actualizado);
-}
+   
 
  @Override
     public BigDecimal calcularTotalVendido(Long idUsuario) {
@@ -123,14 +94,48 @@ public class UsuarioServiceImpl implements UsuarioService {
         return ventasRepository.totalVendidoPorUsuario(idUsuario);
     }
 
-    @Override
-    public Page<UsuarioResponseDto> listarUsuariosPorEmpresa(Long empresaId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("idUsuario").ascending());
-        Page<Usuario> usuariosPage = usuarioRepository.findByEmpresa_IdEmpresa(empresaId, pageable);
+    
+@Override
+public Page<UsuarioResponseDto> listarUsuariosPorEmpresa(
+        Long empresaId,
+        int page,
+        int size,
+        Usuario.Estado estado,
+        String nombres
+) {
 
-        return usuariosPage.map(UsuarioMapper::toDto);
+    Pageable pageable = PageRequest.of(page, size, Sort.by("idUsuario").ascending());
+
+    Page<Usuario> usuariosPage;
+
+    boolean tieneNombre = nombres != null && !nombres.trim().isEmpty();
+
+    if (estado != null && tieneNombre) {
+
+        usuariosPage = usuarioRepository
+                .findByEmpresa_IdEmpresaAndEstadoAndNombresContainingIgnoreCase(
+                        empresaId, estado, nombres, pageable);
+
+    } else if (estado != null) {
+
+        usuariosPage = usuarioRepository
+                .findByEmpresa_IdEmpresaAndEstado(
+                        empresaId, estado, pageable);
+
+    } else if (tieneNombre) {
+
+        usuariosPage = usuarioRepository
+                .findByEmpresa_IdEmpresaAndNombresContainingIgnoreCase(
+                        empresaId, nombres, pageable);
+
+    } else {
+
+        usuariosPage = usuarioRepository
+                .findByEmpresa_IdEmpresa(empresaId, pageable);
     }
 
+    return usuariosPage.map(UsuarioMapper::toDto);
+}
 
 @Override
 public BigDecimal calcularTotalVendidoEntreFechas(Long idUsuario, LocalDate fechaInicio, LocalDate fechaFin) {
@@ -144,44 +149,17 @@ public BigDecimal calcularTotalVendidoEntreFechas(Long idUsuario, LocalDate fech
 
     return ventasRepository.totalVendidoPorUsuarioEntreFechas(idUsuario, inicioDelDia, finDelDia);
 }
+
+
 @Override
 public BigDecimal calcularGananciaPorUsuario(Long idUsuario) {
     return ventasRepository.gananciaPorUsuario(idUsuario);
 }
-    @Override
-public List<sigiv.Backend.sigiv.Backend.entity.Categoria> listarCategoriasPorUsuario(Long idUsuario) {
-    // Verificar que el usuario exista
-    Usuario usuario = usuarioRepository.findById(idUsuario)
-            .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", idUsuario));
 
-    // Obtener las categorías de la empresa a la que pertenece este usuario
-    return categoriaRepository.findCategoriasByUsuario(idUsuario);
-}
 
-@Override
-public List<sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto> listarProveedoresPorUsuario(Long idUsuario) {
-    Usuario usuario = usuarioRepository.findById(idUsuario)
-            .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", idUsuario));
 
-    Empresa empresa = usuario.getEmpresa();
-    if (empresa == null) {
-        throw new IllegalArgumentException("El usuario no está asociado a ninguna empresa");
-    }
 
-    // Obtener los proveedores de la empresa del usuario
-    List<sigiv.Backend.sigiv.Backend.entity.Proveedor> proveedores = empresa.getProveedores();
 
-    return proveedores.stream()
-            .map(sigiv.Backend.sigiv.Backend.dto.mapper.ProveedorMapper::toDto)
-            .collect(Collectors.toList());
-}
 
-@Override
-public List<UsuarioResponseDto> buscarPorNombre(String nombres) {
-    List<Usuario> usuarios = usuarioRepository.findByNombresContainingIgnoreCase(nombres);
-    return usuarios.stream()
-            .map(UsuarioMapper::toDto)
-            .toList();
-}
 
 }

@@ -1,5 +1,6 @@
 package sigiv.Backend.sigiv.Backend.services.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -11,12 +12,19 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.lowagie.text.Document;
+import com.lowagie.text.Font;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
+
 import sigiv.Backend.sigiv.Backend.dto.detalleVenta.DetalleVentaRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.mapper.DetalleVentaMapper;
 import sigiv.Backend.sigiv.Backend.dto.mapper.VentasMapper;
 import sigiv.Backend.sigiv.Backend.dto.ventas.VentasRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.ventas.VentasResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.DetalleVentas;
+import sigiv.Backend.sigiv.Backend.entity.Empresa;
 import sigiv.Backend.sigiv.Backend.entity.Producto;
 import sigiv.Backend.sigiv.Backend.entity.Usuario;
 import sigiv.Backend.sigiv.Backend.entity.Ventas;
@@ -25,6 +33,12 @@ import sigiv.Backend.sigiv.Backend.repository.ProductoRepository;
 import sigiv.Backend.sigiv.Backend.repository.UsuarioRepository;
 import sigiv.Backend.sigiv.Backend.repository.VentasRepository;
 import sigiv.Backend.sigiv.Backend.services.VentasService;
+import java.text.NumberFormat;
+import java.util.Locale;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
+
 
 @Service
 public class VentasServiceImpl implements VentasService {
@@ -180,4 +194,114 @@ public Page<VentasResponseDto> listarVentasPorEmpresaPaginado(
 
     return ventasPage.map(ventasMapper::toDto);
 }
+
+
+@Override
+public byte[] generarFacturaPdf(Long id) {
+
+    try {
+        Ventas venta = ventasRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Venta no encontrada"));
+
+        // 🔹 Obtener empresa desde usuario
+        Empresa empresa = venta.getUsuario().getEmpresa();
+
+        // 🔹 Formato Colombia
+        NumberFormat formatoNumero = NumberFormat.getInstance(new Locale("es", "CO"));
+        formatoNumero.setMinimumFractionDigits(0);
+        formatoNumero.setMaximumFractionDigits(0);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Document document = new Document();
+        PdfWriter.getInstance(document, out);
+
+        document.open();
+
+        Font tituloFont = new Font(Font.HELVETICA, 18, Font.BOLD);
+        Font empresaFont = new Font(Font.HELVETICA, 14, Font.BOLD);
+        Font normalFont = new Font(Font.HELVETICA, 12);
+
+  
+
+        // ===============================
+        // 🧾 INFORMACIÓN DE FACTURA
+        // ===============================
+
+        document.add(new Paragraph("FACTURA DE VENTA", tituloFont));
+        document.add(new Paragraph(" "));
+              // ===============================
+        // 🏢 INFORMACIÓN DE LA EMPRESA
+        // ===============================
+
+        document.add(new Paragraph(empresa.getNombreEmpresa(), empresaFont));
+        document.add(new Paragraph("NIT: " + empresa.getNit(), normalFont));
+        document.add(new Paragraph("Dirección: " + empresa.getDireccion(), normalFont));
+        document.add(new Paragraph("Teléfono: " + formatoNumero.format(empresa.getTelefono()), normalFont));
+        document.add(new Paragraph(" "));
+        document.add(new Paragraph("Factura #: " + venta.getIdventa(), normalFont));
+        document.add(new Paragraph("Fecha: " + venta.getFecha()));
+        document.add(new Paragraph("Cliente: " + venta.getNombreCliente()));
+        document.add(new Paragraph("Teléfono Cliente: " + venta.getTelefonoCliente()));
+        document.add(new Paragraph("Vendedor: " + venta.getUsuario().getNombres()));
+        document.add(new Paragraph(" "));
+
+        // ===============================
+        // 📦 TABLA PRODUCTOS
+        // ===============================
+
+        PdfPTable table = new PdfPTable(4);
+        table.setWidthPercentage(100);
+
+        table.addCell("Producto");
+        table.addCell("Cantidad");
+        table.addCell("Precio");
+        table.addCell("Subtotal");
+
+        for (DetalleVentas d : venta.getDetalles()) {
+            table.addCell(d.getProducto().getNombre());
+            table.addCell(String.valueOf(d.getCantidad()));
+            table.addCell(formatoNumero.format(d.getProducto().getPrecio()));
+            table.addCell(formatoNumero.format(d.getSubtotal()));
+        }
+
+        document.add(table);
+
+        document.add(new Paragraph(" "));
+        document.add(new Paragraph("Total: " + formatoNumero.format(venta.getTotal()), empresaFont));
+        document.add(new Paragraph("Efectivo: " + formatoNumero.format(venta.getEfectivo())));
+        document.add(new Paragraph("Cambio: " + formatoNumero.format(venta.getCambio())));
+
+        document.close();
+
+        return out.toByteArray();
+
+    } catch (Exception e) {
+        throw new RuntimeException("Error generando factura PDF", e);
+    }
+}
+
+
+
+@Override
+public Page<VentasResponseDto> buscarVentaPorIdYEmpresa(
+        Long empresaId,
+        Long idVenta,
+        int page,
+        int size
+) {
+
+    Pageable pageable = PageRequest.of(page, size);
+
+    Page<Ventas> ventasPage =
+            ventasRepository.findByIdventaAndUsuarioEmpresaIdEmpresa(
+                    idVenta,
+                    empresaId,
+                    pageable
+            );
+
+    return ventasPage.map(ventasMapper::toDto);
+}
+
+
+
 }

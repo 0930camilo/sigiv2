@@ -1,20 +1,26 @@
 package sigiv.Backend.sigiv.Backend.services;
 
-import java.util.List;
+
+
+import org.springframework.data.domain.Page;
 
 import sigiv.Backend.sigiv.Backend.dto.catego.CategoriaRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.catego.CategoriaResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Categoria;
 
+
 public interface CategoriaService {
     CategoriaResponseDto crearCategoria(CategoriaRequestDto dto);
     CategoriaResponseDto obtenerPorId(Long id);
     CategoriaResponseDto actualizarCategoria(Long id, CategoriaRequestDto dto);
-    List<CategoriaResponseDto> listarCategorias();
-    List<CategoriaResponseDto> listarPorEstado(Categoria.Estado estado);
+
     void eliminarCategoria(Long id);
-    CategoriaResponseDto cambiarEstado(Long id);
-   List<CategoriaResponseDto> buscarPorNombre(String nombre);
-List<CategoriaResponseDto> listarPorEmpresa(Long idEmpresa);
+  Page<CategoriaResponseDto> listarCategoriasPorEmpresa(
+        Long empresaId,
+        int page,
+        int size,
+        Categoria.Estado estado,
+        String nombre
+);
 
 }

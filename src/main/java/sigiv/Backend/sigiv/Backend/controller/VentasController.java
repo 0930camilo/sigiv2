@@ -51,30 +51,59 @@ public class VentasController {
         ventasService.eliminarVenta(id);
     }
 
-    // ✅ ENDPOINT CORRECTO
-    @GetMapping("/empresa/{empresaId}/ventas")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> listarVentasPorEmpresa(
-            @PathVariable Long empresaId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
+ @GetMapping("/empresa/{empresaId}/ventas")
+public ResponseEntity<ApiResponse<Map<String, Object>>> listarVentasPorEmpresa(
+        @PathVariable Long empresaId,
+        @RequestParam(required = false) Long idVenta,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+) {
 
-        Page<VentasResponseDto> ventasPage =
-                ventasService.listarVentasPorEmpresaPaginado(empresaId, page, size);
+    Page<VentasResponseDto> ventasPage;
 
-        Map<String, Object> data = new HashMap<>();
-        data.put("ventas", ventasPage.getContent());
-        data.put("totalElements", ventasPage.getTotalElements());
-        data.put("totalPages", ventasPage.getTotalPages());
-        data.put("currentPage", ventasPage.getNumber());
-
-        return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        HttpStatus.OK.value(),
-                        "Ventas de la empresa " + empresaId + " listadas correctamente",
-                        data
-                )
+    if (idVenta != null) {
+        ventasPage = ventasService.buscarVentaPorIdYEmpresa(
+                empresaId,
+                idVenta,
+                page,
+                size
+        );
+    } else {
+        ventasPage = ventasService.listarVentasPorEmpresaPaginado(
+                empresaId,
+                page,
+                size
         );
     }
+
+    Map<String, Object> data = new HashMap<>();
+    data.put("ventas", ventasPage.getContent());
+    data.put("totalElements", ventasPage.getTotalElements());
+    data.put("totalPages", ventasPage.getTotalPages());
+    data.put("currentPage", ventasPage.getNumber());
+
+    return ResponseEntity.ok(
+            new ApiResponse<>(
+                    true,
+                    HttpStatus.OK.value(),
+                    "Ventas obtenidas correctamente",
+                    data
+            )
+    );
+}
+
+
+    @GetMapping("/{id}/factura")
+public ResponseEntity<byte[]> descargarFactura(@PathVariable Long id) {
+
+    byte[] pdf = ventasService.generarFacturaPdf(id);
+
+    return ResponseEntity.ok()
+            .header("Content-Disposition", "attachment; filename=factura-" + id + ".pdf")
+            .header("Content-Type", "application/pdf")
+            .body(pdf);
+}
+
+
+
 }

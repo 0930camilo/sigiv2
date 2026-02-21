@@ -1,28 +1,36 @@
 package sigiv.Backend.sigiv.Backend.repository;
 
-import java.util.List;
 
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 
 import sigiv.Backend.sigiv.Backend.entity.Proveedor;
 
 public interface ProveedorRepository extends JpaRepository<Proveedor, Long> {
-    
-        List<Proveedor> findByEstado(Proveedor.Estado estado);
 
-     List<Proveedor> findByNombreContainingIgnoreCase(String nombre);
+  
+Page<Proveedor> findByEmpresa_IdEmpresa(Long empresaId, Pageable pageable);
 
-    
+Page<Proveedor> findByEmpresa_IdEmpresaAndEstado(
+        Long empresaId,
+        Proveedor.Estado estado,
+        Pageable pageable
+);
 
+Page<Proveedor> findByEmpresa_IdEmpresaAndNombreContainingIgnoreCase(
+        Long empresaId,
+        String nombre,
+        Pageable pageable
+);
 
-      @Query("""
-    SELECT p
-    FROM Proveedor p
-    WHERE p.empresa.idEmpresa = :idEmpresa
-""")
-List<Proveedor> findProveedoresByEmpresa(@Param("idEmpresa") Long idEmpresa);
-    
+Page<Proveedor> findByEmpresa_IdEmpresaAndEstadoAndNombreContainingIgnoreCase(
+        Long empresaId,
+        Proveedor.Estado estado,
+        String nombre,
+        Pageable pageable
+);
+
 }
