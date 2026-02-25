@@ -1,21 +1,31 @@
 package sigiv.Backend.sigiv.Backend.services;
 
-import java.util.List;
 
 
+
+
+import org.springframework.data.domain.Page;
 
 import sigiv.Backend.sigiv.Backend.dto.produc.ProductoRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.produc.ProductoResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Producto;
 
+
 public interface ProductoService {
     ProductoResponseDto crearProducto(ProductoRequestDto     dto);
     ProductoResponseDto obtenerPorId(Long id);
     ProductoResponseDto actualizarProducto(Long id, ProductoRequestDto dto);
-    List<ProductoResponseDto> listarProductos();
-    List<ProductoResponseDto> listarPorEstado(Producto.Estado estado);
     void eliminarProducto(Long id);
-    ProductoResponseDto cambiarEstado(Long id);
-    List<ProductoResponseDto> buscarPorNombre(String nombre);
+
+
     
+Page<ProductoResponseDto> productosPorEmpresa(
+        Long idEmpresa,
+        int page,
+        int size,
+        Producto.Estado estado,
+        String nombre,
+        String categoria,
+        String proveedor
+);
 }

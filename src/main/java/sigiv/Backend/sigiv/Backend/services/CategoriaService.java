@@ -13,8 +13,8 @@ public interface CategoriaService {
     CategoriaResponseDto crearCategoria(CategoriaRequestDto dto);
     CategoriaResponseDto obtenerPorId(Long id);
     CategoriaResponseDto actualizarCategoria(Long id, CategoriaRequestDto dto);
-
     void eliminarCategoria(Long id);
+    
   Page<CategoriaResponseDto> listarCategoriasPorEmpresa(
         Long empresaId,
         int page,

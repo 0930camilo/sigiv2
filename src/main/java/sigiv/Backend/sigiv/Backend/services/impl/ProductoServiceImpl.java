@@ -1,8 +1,11 @@
 package sigiv.Backend.sigiv.Backend.services.impl;
 
-import java.util.List;
-import java.util.stream.Collectors;
 
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -74,14 +77,7 @@ public class ProductoServiceImpl implements ProductoService {
         return ProductoMapper.toDto(actualizado);
     }
 
-    // Listar todos los productos
-    @Override
-    public List<ProductoResponseDto> listarProductos() {
-        return productoRepository.findAll()
-                .stream()
-                .map(ProductoMapper::toDto)
-                .collect(Collectors.toList());
-    }
+
 
     // Eliminar producto
     @Override
@@ -92,38 +88,30 @@ public class ProductoServiceImpl implements ProductoService {
         productoRepository.deleteById(id);
     }
 
-    // Cambiar estado del producto automáticamente (Activo ↔ Inactivo)
-    @Override
-    public ProductoResponseDto cambiarEstado(Long id) {
-        Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Producto", "id", id));
+  
+@Override
+public Page<ProductoResponseDto> productosPorEmpresa(
+        Long idEmpresa,
+        int page,
+        int size,
+        Producto.Estado estado,
+        String nombre,
+        String categoria,
+        String proveedor
+) {
 
-        if (producto.getEstado() == Producto.Estado.Activo) {
-            producto.setEstado(Producto.Estado.Inactivo);
-        } else {
-            producto.setEstado(Producto.Estado.Activo);
-        }
+    Pageable pageable = PageRequest.of(page, size, Sort.by("idproducto").ascending());
 
-        Producto actualizado = productoRepository.save(producto);
-        return ProductoMapper.toDto(actualizado);
-    }
+    Page<Producto> productosPage =
+            productoRepository.buscarProductosConFiltros(
+                    idEmpresa,
+                    estado,
+                    nombre,
+                    categoria,
+                    proveedor,
+                    pageable
+            );
 
-    // Listar productos por estado
-    @Override
-    public List<ProductoResponseDto> listarPorEstado(Producto.Estado estado) {
-        List<Producto> productos = productoRepository.findAll()
-                .stream()
-                .filter(producto -> producto.getEstado() == estado)
-                .collect(Collectors.toList());
-        return productos.stream()
-                .map(ProductoMapper::toDto)
-                .collect(Collectors.toList());
-    }
-    @Override
-    public List<ProductoResponseDto> buscarPorNombre(String nombre) {
-        List<Producto> productos = productoRepository.findByNombreContainingIgnoreCase(nombre);
-        return productos.stream()
-                .map(ProductoMapper::toDto)
-                .collect(Collectors.toList());
-    }
+    return productosPage.map(ProductoMapper::toDto);
+}
 }
