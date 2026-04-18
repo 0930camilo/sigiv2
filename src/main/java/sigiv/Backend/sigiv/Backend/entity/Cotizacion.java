@@ -29,8 +29,8 @@ public class Cotizacion {
     @JsonBackReference("usuario-cotizacion")
     private Usuario usuario;
 
-    // ✅ Relación con los detalles de cotización (ahora con fetch EAGER)
-    @OneToMany(mappedBy = "cotizacion", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    // 🔥 CAMBIO IMPORTANTE: LAZY
+    @OneToMany(mappedBy = "cotizacion", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference("cotizacion-detalles")
     private List<DetalleCotizacion> detalles;
 }

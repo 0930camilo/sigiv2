@@ -1,7 +1,10 @@
 package sigiv.Backend.sigiv.Backend.entity;
 
 import java.math.BigDecimal;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -15,10 +18,8 @@ public class DetalleCotizacion {
     private Long iddetalle;
 
     private Integer cantidad;
-
     private BigDecimal precio;
 
-    // ✅ CAMBIADO: ahora es una columna normal, sin "generated always as"
     @Column(precision = 15, scale = 2)
     private BigDecimal subtotal;
 
@@ -29,7 +30,9 @@ public class DetalleCotizacion {
     @JsonBackReference("cotizacion-detalles")
     private Cotizacion cotizacion;
 
+    // 🔥 SOLUCIÓN CLAVE: evitar serialización infinita
     @ManyToOne
     @JoinColumn(name = "producto_idproducto")
+    @JsonIgnore
     private Producto producto;
 }

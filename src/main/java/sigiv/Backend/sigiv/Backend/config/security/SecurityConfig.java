@@ -28,14 +28,22 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
 
     @Bean
+
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(Customizer.withDefaults()) 
+                .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
+                        // ✅ PERMITIR PREFLIGHT (CORS)
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // ✅ ENDPOINTS PUBLICOS
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/empresas/crear-empresa").permitAll()
-                        .anyRequest().authenticated())
+
+                        // 🔒 TODO LO DEMÁS REQUIERE TOKEN
+                        .anyRequest().authenticated()
+                )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

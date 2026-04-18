@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 
 import sigiv.Backend.sigiv.Backend.dto.cotizacion.CotizacionRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.cotizacion.CotizacionResponseDto;
-import sigiv.Backend.sigiv.Backend.dto.detalleCotizacion.DetalleCotizacionResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Cotizacion;
 import sigiv.Backend.sigiv.Backend.entity.Usuario;
 
@@ -17,7 +16,6 @@ public class CotizacionMapper {
     @Autowired
     private DetalleCotizacionMapper detalleMapper;
 
-    // Convierte de DTO a Entidad
     public Cotizacion toEntity(CotizacionRequestDto dto, Usuario usuario) {
         Cotizacion cot = new Cotizacion();
         cot.setUsuario(usuario);
@@ -27,9 +25,9 @@ public class CotizacionMapper {
         return cot;
     }
 
-    // Convierte de Entidad a DTO
     public CotizacionResponseDto toDto(Cotizacion cot) {
         CotizacionResponseDto dto = new CotizacionResponseDto();
+
         dto.setIdcotizacion(cot.getIdcotizacion());
         dto.setFecha(cot.getFecha());
         dto.setNombreCliente(cot.getNombreCliente());
@@ -40,12 +38,12 @@ public class CotizacionMapper {
             dto.setNombreUsuario(cot.getUsuario().getNombres());
         }
 
-        // 🔹 Mapea los detalles si existen
-        if (cot.getDetalles() != null && !cot.getDetalles().isEmpty()) {
+        // 🔥 PROTEGIDO CONTRA NULL
+        if (cot.getDetalles() != null) {
             dto.setDetalles(
-                cot.getDetalles().stream()
-                    .map(detalleMapper::toDto)
-                    .collect(Collectors.toList())
+                    cot.getDetalles().stream()
+                            .map(detalleMapper::toDto)
+                            .collect(Collectors.toList())
             );
         }
 
