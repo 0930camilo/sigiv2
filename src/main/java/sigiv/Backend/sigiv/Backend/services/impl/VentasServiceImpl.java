@@ -23,6 +23,7 @@ import sigiv.Backend.sigiv.Backend.dto.mapper.DetalleVentaMapper;
 import sigiv.Backend.sigiv.Backend.dto.mapper.VentasMapper;
 import sigiv.Backend.sigiv.Backend.dto.ventas.VentasRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.ventas.VentasResponseDto;
+import sigiv.Backend.sigiv.Backend.dto.ventas.ResumenVendedorDto;
 import sigiv.Backend.sigiv.Backend.entity.DetalleVentas;
 import sigiv.Backend.sigiv.Backend.entity.Empresa;
 import sigiv.Backend.sigiv.Backend.entity.Producto;
@@ -35,6 +36,9 @@ import sigiv.Backend.sigiv.Backend.repository.VentasRepository;
 import sigiv.Backend.sigiv.Backend.services.VentasService;
 import java.text.NumberFormat;
 import java.util.Locale;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
@@ -302,6 +306,28 @@ public Page<VentasResponseDto> buscarVentaPorIdYEmpresa(
     return ventasPage.map(ventasMapper::toDto);
 }
 
+@Override
+public List<ResumenVendedorDto> resumenVentasPorUsuario(
+        Long empresaId,
+        String fechaInicio,
+        String fechaFin
+) {
+    LocalDateTime inicio = LocalDate.parse(fechaInicio).atStartOfDay();
+    LocalDateTime fin = LocalDate.parse(fechaFin).atTime(LocalTime.MAX);
+
+    List<Object[]> resultados = ventasRepository.resumenVentasPorUsuario(empresaId, inicio, fin);
+    List<ResumenVendedorDto> resumen = new ArrayList<>();
+
+    for (Object[] row : resultados) {
+        resumen.add(new ResumenVendedorDto(
+            (String) row[0],
+            (Long) row[1],
+            (BigDecimal) row[2]
+        ));
+    }
+
+    return resumen;
+}
 
 
 }

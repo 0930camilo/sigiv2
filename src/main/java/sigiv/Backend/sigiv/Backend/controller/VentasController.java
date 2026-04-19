@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import sigiv.Backend.sigiv.Backend.dto.ventas.VentasRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.ventas.VentasResponseDto;
+import sigiv.Backend.sigiv.Backend.dto.ventas.ResumenVendedorDto;
 import sigiv.Backend.sigiv.Backend.services.VentasService;
 import sigiv.Backend.sigiv.Backend.util.ApiResponse;
 
@@ -104,6 +105,18 @@ public ResponseEntity<byte[]> descargarFactura(@PathVariable Long id) {
             .body(pdf);
 }
 
+    @GetMapping("/empresa/{empresaId}/resumen-vendedores")
+    public ResponseEntity<ApiResponse<List<ResumenVendedorDto>>> resumenVendedores(
+            @PathVariable Long empresaId,
+            @RequestParam String fechaInicio,
+            @RequestParam String fechaFin
+    ) {
+        List<ResumenVendedorDto> resumen = ventasService.resumenVentasPorUsuario(empresaId, fechaInicio, fechaFin);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Resumen de vendedores obtenido correctamente", resumen)
+        );
+    }
 
 
 }

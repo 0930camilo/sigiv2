@@ -129,6 +129,21 @@ Page<Ventas> findByIdventaAndUsuarioEmpresaIdEmpresa(
         Pageable pageable
 );
 
+    @Query("""
+        SELECT u.nombres, COUNT(v), COALESCE(SUM(v.total), 0)
+        FROM Ventas v
+        JOIN v.usuario u
+        WHERE u.empresa.idEmpresa = :empresaId
+        AND v.fecha BETWEEN :fechaInicio AND :fechaFin
+        GROUP BY u.idUsuario, u.nombres
+        ORDER BY SUM(v.total) DESC
+    """)
+    List<Object[]> resumenVentasPorUsuario(
+        @Param("empresaId") Long empresaId,
+        @Param("fechaInicio") java.time.LocalDateTime fechaInicio,
+        @Param("fechaFin") java.time.LocalDateTime fechaFin
+    );
+
 
 
 

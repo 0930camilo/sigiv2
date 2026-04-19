@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 
 import sigiv.Backend.sigiv.Backend.dto.ventas.VentasRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.ventas.VentasResponseDto;
+import sigiv.Backend.sigiv.Backend.dto.ventas.ResumenVendedorDto;
 
 public interface VentasService {
 
@@ -36,5 +37,11 @@ public interface VentasService {
         int page,
         int size
 );
+
+    List<ResumenVendedorDto> resumenVentasPorUsuario(
+        Long empresaId,
+        String fechaInicio,
+        String fechaFin
+    );
 
 }
