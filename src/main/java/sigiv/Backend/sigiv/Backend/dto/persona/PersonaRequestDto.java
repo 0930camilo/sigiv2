@@ -16,6 +16,7 @@ import sigiv.Backend.sigiv.Backend.entity.Persona;
 public class PersonaRequestDto {
 
     private Long idpersona;
+    private String documento;
     private String nombre;
     private String correo;
     private String telefono;

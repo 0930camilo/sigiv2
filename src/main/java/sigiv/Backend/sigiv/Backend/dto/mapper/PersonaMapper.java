@@ -12,6 +12,7 @@ public class PersonaMapper {
         if (p == null) return null;
         return new PersonaResponseDto(
             p.getIdpersona(),
+            p.getDocumento(),
             p.getNombre(),
             p.getCorreo(),
             p.getTelefono(),
@@ -32,6 +33,7 @@ public class PersonaMapper {
 
     // Actualizar persona existente
     public static void updateEntityFromDto(PersonaRequestDto dto, Persona entity, Empresa empresa) {
+        if (dto.getDocumento() != null) entity.setDocumento(dto.getDocumento());
         if (dto.getNombre() != null) entity.setNombre(dto.getNombre());
         if (dto.getCorreo() != null) entity.setCorreo(dto.getCorreo());
         if (dto.getTelefono() != null) entity.setTelefono(dto.getTelefono());

@@ -94,6 +94,12 @@ public class PersonaServiceImpl implements PersonaService {
     }
 
     @Override
+    public Page<PersonaResponseDto> filtrarPorEmpresa(Long empresaId, Persona.Estado estado, String documento, String nombre, int page, int size) {
+        return personaRepository.filtrarPorEmpresa(empresaId, estado, documento, nombre, PageRequest.of(page, size))
+                .map(PersonaMapper::toDto);
+    }
+
+    @Override
     public void eliminarPersona(Long id) {
         if (!personaRepository.existsById(id)) {
             throw new ResourceNotFoundException("Persona", "id", id);

@@ -15,6 +15,7 @@ public class PersonaResponseDto {
 
 
     private Long idpersona;
+    private String documento;
     private String nombre;
     private String correo;
     private String telefono;

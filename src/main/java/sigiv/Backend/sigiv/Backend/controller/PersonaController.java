@@ -95,9 +95,17 @@ public class PersonaController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> listarPorEmpresa(
             @PathVariable Long empresaId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Persona.Estado estado,
+            @RequestParam(required = false) String documento,
+            @RequestParam(required = false) String nombre) {
 
-        Page<PersonaResponseDto> personasPage = personaService.listarPorEmpresaPaginado(empresaId, page, size);
+        Page<PersonaResponseDto> personasPage;
+        if (estado != null || documento != null || nombre != null) {
+            personasPage = personaService.filtrarPorEmpresa(empresaId, estado, documento, nombre, page, size);
+        } else {
+            personasPage = personaService.listarPorEmpresaPaginado(empresaId, page, size);
+        }
 
         Map<String, Object> data = new HashMap<>();
         data.put("personas", personasPage.getContent());
