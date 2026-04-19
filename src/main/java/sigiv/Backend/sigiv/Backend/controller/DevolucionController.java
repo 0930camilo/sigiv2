@@ -30,4 +30,12 @@ public class DevolucionController {
         List<DevolucionResponseDto> devoluciones = devolucionService.listarDevolucionesPorVenta(ventaId);
         return ResponseEntity.ok(devoluciones);
     }
+
+    @GetMapping("/empresa/{empresaId}")
+    public ResponseEntity<List<DevolucionResponseDto>> listarPorEmpresa(
+            @PathVariable Long empresaId,
+            @RequestParam(required = false) Long ventaId) {
+        List<DevolucionResponseDto> devoluciones = devolucionService.listarDevolucionesPorEmpresa(empresaId, ventaId);
+        return ResponseEntity.ok(devoluciones);
+    }
 }

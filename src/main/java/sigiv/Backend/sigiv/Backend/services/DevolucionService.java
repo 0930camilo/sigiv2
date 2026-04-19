@@ -7,4 +7,5 @@ import sigiv.Backend.sigiv.Backend.dto.devol.DevolucionResponseDto;
 public interface DevolucionService {
     DevolucionResponseDto registrarDevolucion(DevolucionRequestDto dto);
     List<DevolucionResponseDto> listarDevolucionesPorVenta(Long ventaId);
+    List<DevolucionResponseDto> listarDevolucionesPorEmpresa(Long empresaId, Long ventaId);
 }

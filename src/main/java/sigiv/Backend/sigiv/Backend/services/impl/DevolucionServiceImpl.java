@@ -98,17 +98,32 @@ public class DevolucionServiceImpl implements DevolucionService {
     @Override
     public List<DevolucionResponseDto> listarDevolucionesPorVenta(Long ventaId) {
         return devolucionRepository.findByVentaIdventa(ventaId).stream()
-                .map(dev -> {
-                    DevolucionResponseDto dto = new DevolucionResponseDto();
-                    dto.setIddevolucion(dev.getIdDevolucion());
-                    dto.setVentaId(dev.getVenta().getIdventa());
-                    dto.setProductoId(dev.getProducto().getIdproducto());
-                    dto.setNombreProducto(dev.getProducto().getNombre());
-                    dto.setCantidad(dev.getCantidad());
-                    dto.setMotivo(dev.getMotivo());
-                    dto.setFecha(dev.getFecha());
-                    return dto;
-                })
+                .map(this::mapToDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DevolucionResponseDto> listarDevolucionesPorEmpresa(Long empresaId, Long ventaId) {
+        List<Devolucion> devoluciones;
+        if (ventaId != null) {
+            devoluciones = devolucionRepository.findByVentaIdAndEmpresaId(ventaId, empresaId);
+        } else {
+            devoluciones = devolucionRepository.findByEmpresaId(empresaId);
+        }
+        return devoluciones.stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    private DevolucionResponseDto mapToDto(Devolucion dev) {
+        DevolucionResponseDto dto = new DevolucionResponseDto();
+        dto.setIddevolucion(dev.getIdDevolucion());
+        dto.setVentaId(dev.getVenta().getIdventa());
+        dto.setProductoId(dev.getProducto().getIdproducto());
+        dto.setNombreProducto(dev.getProducto().getNombre());
+        dto.setCantidad(dev.getCantidad());
+        dto.setMotivo(dev.getMotivo());
+        dto.setFecha(dev.getFecha());
+        return dto;
     }
 }
