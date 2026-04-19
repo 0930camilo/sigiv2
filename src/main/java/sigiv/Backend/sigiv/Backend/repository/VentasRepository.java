@@ -66,6 +66,22 @@ BigDecimal totalVendidoPorEmpresaEntreFechas(
     """)
     BigDecimal gananciaPorUsuario(@Param("idUsuario") Long idUsuario);
 
+    @Query("""
+        SELECT COALESCE(SUM(
+            (p.precio - p.precioCompra) * dv.cantidad
+        ), 0)
+        FROM Ventas v
+        JOIN v.detalles dv
+        JOIN dv.producto p
+        WHERE v.usuario.idUsuario = :idUsuario
+        AND v.fecha BETWEEN :fechaInicio AND :fechaFin
+    """)
+    BigDecimal gananciaPorUsuarioEntreFechas(
+        @Param("idUsuario") Long idUsuario,
+        @Param("fechaInicio") java.time.LocalDateTime fechaInicio,
+        @Param("fechaFin") java.time.LocalDateTime fechaFin
+    );
+
     // 🔹 Ganancia total por empresa
     @Query("""
         SELECT COALESCE(SUM(
@@ -77,6 +93,22 @@ BigDecimal totalVendidoPorEmpresaEntreFechas(
         WHERE v.usuario.empresa.idEmpresa = :idEmpresa
     """)
     BigDecimal gananciaPorEmpresa(@Param("idEmpresa") Long idEmpresa);
+
+    @Query("""
+        SELECT COALESCE(SUM(
+            (p.precio - p.precioCompra) * dv.cantidad
+        ), 0)
+        FROM Ventas v
+        JOIN v.detalles dv
+        JOIN dv.producto p
+        WHERE v.usuario.empresa.idEmpresa = :idEmpresa
+        AND v.fecha BETWEEN :fechaInicio AND :fechaFin
+    """)
+    BigDecimal gananciaPorEmpresaEntreFechas(
+        @Param("idEmpresa") Long idEmpresa,
+        @Param("fechaInicio") java.time.LocalDateTime fechaInicio,
+        @Param("fechaFin") java.time.LocalDateTime fechaFin
+    );
 
 
 

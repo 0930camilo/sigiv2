@@ -28,6 +28,7 @@ public interface UsuarioService {
 BigDecimal calcularTotalVendido(Long idUsuario);
 BigDecimal calcularTotalVendidoEntreFechas(Long idUsuario, java.time.LocalDate fechaInicio, java.time.LocalDate fechaFin);
 BigDecimal calcularGananciaPorUsuario(Long idUsuario);
+BigDecimal calcularGananciaPorUsuarioEntreFechas(Long idUsuario, java.time.LocalDate fechaInicio, java.time.LocalDate fechaFin);
 
 
 

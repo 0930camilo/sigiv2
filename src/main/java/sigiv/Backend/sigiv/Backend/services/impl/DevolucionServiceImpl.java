@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -113,6 +115,12 @@ public class DevolucionServiceImpl implements DevolucionService {
         return devoluciones.stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<DevolucionResponseDto> listarDevolucionesPorEmpresaPaginado(Long empresaId, int page, int size) {
+        return devolucionRepository.findByEmpresaId(empresaId, PageRequest.of(page, size))
+                .map(this::mapToDto);
     }
 
     private DevolucionResponseDto mapToDto(Devolucion dev) {

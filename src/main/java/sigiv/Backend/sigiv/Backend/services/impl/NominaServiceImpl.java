@@ -1,6 +1,8 @@
 package sigiv.Backend.sigiv.Backend.services.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import sigiv.Backend.sigiv.Backend.dto.nomina.NominaRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.nomina.NominaResponseDto;
@@ -96,6 +98,27 @@ public class NominaServiceImpl implements NominaService {
                 .filter(n -> n.getEstado() == estado)
                 .map(NominaMapper::toDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<NominaResponseDto> listarPorEmpresa(Long empresaId) {
+        return nominaRepository.findByEmpresaIdEmpresa(empresaId).stream()
+                .peek(nomina -> {
+                    BigDecimal total = personaNominaRepository.calcularTotalPorNomina(nomina.getIdnomina());
+                    nomina.setTotalPago(total != null ? total : BigDecimal.ZERO);
+                })
+                .map(NominaMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<NominaResponseDto> listarPorEmpresaPaginado(Long empresaId, int page, int size) {
+        Page<Nomina> nominasPage = nominaRepository.findByEmpresaIdEmpresa(empresaId, PageRequest.of(page, size));
+        return nominasPage.map(nomina -> {
+            BigDecimal total = personaNominaRepository.calcularTotalPorNomina(nomina.getIdnomina());
+            nomina.setTotalPago(total != null ? total : BigDecimal.ZERO);
+            return NominaMapper.toDto(nomina);
+        });
     }
 
     @Override

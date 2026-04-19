@@ -156,6 +156,13 @@ public BigDecimal calcularGananciaPorUsuario(Long idUsuario) {
     return ventasRepository.gananciaPorUsuario(idUsuario);
 }
 
+@Override
+public BigDecimal calcularGananciaPorUsuarioEntreFechas(Long idUsuario, LocalDate fechaInicio, LocalDate fechaFin) {
+    LocalDateTime inicioDelDia = fechaInicio.atStartOfDay();
+    LocalDateTime finDelDia = fechaFin.atTime(23, 59, 59);
+    return ventasRepository.gananciaPorUsuarioEntreFechas(idUsuario, inicioDelDia, finDelDia);
+}
+
 
 
 

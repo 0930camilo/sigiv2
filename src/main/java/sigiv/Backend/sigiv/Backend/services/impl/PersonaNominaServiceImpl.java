@@ -80,6 +80,15 @@ public class PersonaNominaServiceImpl implements PersonaNominaService {
                 .collect(Collectors.toList());
     }
 
+    // ✅ Listar relaciones por nómina
+    @Override
+    public List<PersonaNominaResponseDto> listarPorNomina(Long nominaId) {
+        return personaNominaRepository.findByIdnomina(nominaId)
+                .stream()
+                .map(PersonaNominaMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
     // ✅ Eliminar una relación PersonaNomina (por idPersona)
     @Override
     public void eliminarPersona(Long idPersona) {

@@ -12,6 +12,7 @@ public interface PersonaNominaService {
     PersonaNominaResponseDto obtenerPorId(Long id);
     PersonaNominaResponseDto actualizarPersonaNomina(Long id, PersonaNominaRequestDto dto);
     List<PersonaNominaResponseDto> listarPersonas();
+    List<PersonaNominaResponseDto> listarPorNomina(Long nominaId);
     void eliminarPersona(Long id);
     PersonaNominaResponseDto cambiarEstado(Long id);
 }

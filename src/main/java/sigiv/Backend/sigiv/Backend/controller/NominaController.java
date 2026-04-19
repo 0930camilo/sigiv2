@@ -1,6 +1,10 @@
 package sigiv.Backend.sigiv.Backend.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -80,6 +84,27 @@ public class NominaController {
         return ResponseEntity.ok(
                 new ApiResponse<>(true, HttpStatus.OK.value(),
                         "Nómina eliminada correctamente", null)
+        );
+    }
+
+    // ✅ Listar nóminas por empresa
+    @GetMapping("/empresa/{empresaId}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> listarPorEmpresa(
+            @PathVariable Long empresaId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<NominaResponseDto> nominasPage = nominaService.listarPorEmpresaPaginado(empresaId, page, size);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("nominas", nominasPage.getContent());
+        data.put("totalElements", nominasPage.getTotalElements());
+        data.put("totalPages", nominasPage.getTotalPages());
+        data.put("currentPage", nominasPage.getNumber());
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Nóminas de la empresa listadas correctamente", data)
         );
     }
 

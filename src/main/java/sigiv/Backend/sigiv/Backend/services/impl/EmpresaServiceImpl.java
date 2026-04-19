@@ -177,6 +177,13 @@ public BigDecimal calcularGananciaPorEmpresa(Long idEmpresa) {
 }
 
 @Override
+public BigDecimal calcularGananciaPorEmpresaEntreFechas(Long idEmpresa, LocalDate fechaInicio, LocalDate fechaFin) {
+    LocalDateTime inicioDelDia = fechaInicio.atStartOfDay();
+    LocalDateTime finDelDia = fechaFin.atTime(23, 59, 59);
+    return ventasRepository.gananciaPorEmpresaEntreFechas(idEmpresa, inicioDelDia, finDelDia);
+}
+
+@Override
 public long contarUsuariosActivos(Long idEmpresa) {
     Empresa empresa = empresaRepository.findById(idEmpresa)
             .orElseThrow(() -> new ResourceNotFoundException("Empresa", "id", idEmpresa));

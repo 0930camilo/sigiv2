@@ -194,8 +194,16 @@ public ResponseEntity<ApiResponse<BigDecimal>> totalVendidoPorEmpresaEntreFechas
     );
 }
 @GetMapping("/ganancia/empresa/{idEmpresa}")
-public ResponseEntity<ApiResponse<BigDecimal>> obtenerGananciaPorEmpresa(@PathVariable Long idEmpresa) {
-    BigDecimal ganancia = empresaService.calcularGananciaPorEmpresa(idEmpresa);
+public ResponseEntity<ApiResponse<BigDecimal>> obtenerGananciaPorEmpresa(
+        @PathVariable Long idEmpresa,
+        @RequestParam(value = "fechaInicio", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+        @RequestParam(value = "fechaFin", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+    BigDecimal ganancia;
+    if (fechaInicio != null && fechaFin != null) {
+        ganancia = empresaService.calcularGananciaPorEmpresaEntreFechas(idEmpresa, fechaInicio, fechaFin);
+    } else {
+        ganancia = empresaService.calcularGananciaPorEmpresa(idEmpresa);
+    }
     return ResponseEntity.ok(
         new ApiResponse<>(true, HttpStatus.OK.value(),
                 "Ganancia obtenida correctamente para la empresa con id " + idEmpresa, ganancia)

@@ -3,6 +3,8 @@ package sigiv.Backend.sigiv.Backend.services.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -75,6 +77,20 @@ public class PersonaServiceImpl implements PersonaService {
                 .stream()
                 .map(PersonaMapper::toDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<PersonaResponseDto> listarPorEmpresa(Long empresaId) {
+        return personaRepository.findByEmpresaIdEmpresa(empresaId)
+                .stream()
+                .map(PersonaMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<PersonaResponseDto> listarPorEmpresaPaginado(Long empresaId, int page, int size) {
+        return personaRepository.findByEmpresaIdEmpresa(empresaId, PageRequest.of(page, size))
+                .map(PersonaMapper::toDto);
     }
 
     @Override

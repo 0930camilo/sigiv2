@@ -49,6 +49,16 @@ public class PersonaNominaController {
         );
     }
 
+    // ✅ Listar relaciones por nómina
+    @GetMapping("/nomina/{nominaId}")
+    public ResponseEntity<ApiResponse<List<PersonaNominaResponseDto>>> listarPorNomina(@PathVariable Long nominaId) {
+        List<PersonaNominaResponseDto> lista = personaNominaService.listarPorNomina(nominaId);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Relaciones Persona-Nómina listadas correctamente", lista)
+        );
+    }
+
     // ✅ Actualizar relación Persona-Nómina
     @PutMapping("/actualizar/{idPersona}")
     public ResponseEntity<ApiResponse<PersonaNominaResponseDto>> actualizar(
