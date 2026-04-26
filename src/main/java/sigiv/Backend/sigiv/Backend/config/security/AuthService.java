@@ -46,6 +46,8 @@ public class AuthService {
             claims.put("nombre_empresa", empresa.getNombreEmpresa());
             claims.put("estado", empresa.getEstado());
             claims.put("nit", empresa.getNit());
+            claims.put("telefono", empresa.getTelefono());
+            claims.put("direccion", empresa.getDireccion());
 
             String token = jwtUtil.generarToken(username, claims);
 
@@ -78,7 +80,11 @@ public class AuthService {
             claims.put("id", usuario.getIdUsuario());
             claims.put("nombre", usuario.getNombres());
             claims.put("estado", usuario.getEstado());
+            claims.put("telefono", usuario.getTelefono());
+            claims.put("direccion", usuario.getDireccion());
             claims.put("empresa_id", usuario.getEmpresa().getIdEmpresa());
+            claims.put("empresa_nombre", usuario.getEmpresa().getNombreEmpresa());
+            claims.put("empresa_nit", usuario.getEmpresa().getNit());
 
             String token = jwtUtil.generarToken(username, claims);
 

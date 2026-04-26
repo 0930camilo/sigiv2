@@ -70,8 +70,13 @@ private final ProductoRepository productoRepository;
         Empresa empresa = empresaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa", "id", id));
 
-        // Actualizamos los datos desde el DTO
+        // Actualizamos los datos desde el DTO (excepto la clave)
         EmpresaMapper.updateEntityFromDto(dto, empresa, empresa);
+
+        // Si se envió una clave nueva, la encriptamos
+        if (dto.getClave() != null && !dto.getClave().isEmpty()) {
+            empresa.setClave(passwordEncoder.encode(dto.getClave()));
+        }
 
         Empresa actualizado = empresaRepository.save(empresa);
         return EmpresaMapper.toDto(actualizado);

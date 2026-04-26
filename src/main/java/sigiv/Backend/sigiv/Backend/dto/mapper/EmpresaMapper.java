@@ -27,7 +27,7 @@ public class EmpresaMapper {
 
     public static void updateEntityFromDto(EmpresaRequestDto dto, Empresa entity, Empresa empresa) {
         if (dto.getNombre_empresa() != null) entity.setNombreEmpresa(dto.getNombre_empresa());
-        if (dto.getClave() != null) entity.setClave(dto.getClave());
+        // La clave NO se actualiza aquí, se maneja en el servicio con encriptación
         if (dto.getNit() != null) entity.setNit(dto.getNit());
         entity.setTelefono(dto.getTelefono());
         if (dto.getDireccion() != null) entity.setDireccion(dto.getDireccion());

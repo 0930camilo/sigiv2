@@ -65,7 +65,14 @@ public class UsuarioServiceImpl implements UsuarioService {
                     .orElseThrow(() -> new IllegalArgumentException("Empresa no encontrada"));
         }
 
+        // Actualizamos los datos desde el DTO (excepto la clave)
         UsuarioMapper.updateEntityFromDto(dto, usuario, empresa);
+
+        // Si se envió una clave nueva, la encriptamos
+        if (dto.getClave() != null && !dto.getClave().isEmpty()) {
+            usuario.setClave(passwordEncoder.encode(dto.getClave()));
+        }
+
         Usuario actualizado = usuarioRepository.save(usuario);
         return UsuarioMapper.toDto(actualizado);
     }
