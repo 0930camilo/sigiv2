@@ -32,44 +32,61 @@ public class AuthService {
         if (empresaOpt.isPresent()) {
             Empresa empresa = empresaOpt.get();
 
-            if (passwordEncoder.matches(password, empresa.getClave())) {
-                Map<String, Object> claims = new HashMap<>();
-                claims.put("rol", "ROLE_EMPRESA");
-                claims.put("id", empresa.getIdEmpresa());
-                claims.put("nombre_empresa", empresa.getNombreEmpresa());
-                claims.put("estado", empresa.getEstado());
-                claims.put("nit", empresa.getNit());
-
-                String token = jwtUtil.generarToken(username, claims);
-
-                return LoginResponseDto.builder()
-                        .token(token)
-                        .usuario(empresa.getNombreEmpresa())
-                        .rol("ROLE_EMPRESA")
-                        .build();
+            if (!passwordEncoder.matches(password, empresa.getClave())) {
+                throw new RuntimeException("Credenciales inválidas. Verifique nombre y clave.");
             }
+
+            if (empresa.getEstado() != Empresa.Estado.Activo) {
+                throw new RuntimeException("La empresa está inactiva. Contacte al administrador.");
+            }
+
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("rol", "ROLE_EMPRESA");
+            claims.put("id", empresa.getIdEmpresa());
+            claims.put("nombre_empresa", empresa.getNombreEmpresa());
+            claims.put("estado", empresa.getEstado());
+            claims.put("nit", empresa.getNit());
+
+            String token = jwtUtil.generarToken(username, claims);
+
+            return LoginResponseDto.builder()
+                    .token(token)
+                    .usuario(empresa.getNombreEmpresa())
+                    .rol("ROLE_EMPRESA")
+                    .build();
         }
 
         Optional<Usuario> usuarioOpt = usuarioRepository.findByNombres(username);
         if (usuarioOpt.isPresent()) {
             Usuario usuario = usuarioOpt.get();
 
-            if (passwordEncoder.matches(password, usuario.getClave())) {
-                Map<String, Object> claims = new HashMap<>();
-                claims.put("rol", "ROLE_USUARIO");
-                claims.put("id", usuario.getIdUsuario());
-                claims.put("nombre", usuario.getNombres());
-                claims.put("estado", usuario.getEstado());
-                claims.put("empresa_id", usuario.getEmpresa().getIdEmpresa());
-
-                String token = jwtUtil.generarToken(username, claims);
-
-                return LoginResponseDto.builder()
-                        .token(token)
-                        .usuario(usuario.getNombres())
-                        .rol("ROLE_USUARIO")
-                        .build();
+            if (!passwordEncoder.matches(password, usuario.getClave())) {
+                throw new RuntimeException("Credenciales inválidas. Verifique nombre y clave.");
             }
+
+            if (usuario.getEstado() != Usuario.Estado.Activo) {
+                throw new RuntimeException("El usuario está inactivo. Contacte al administrador.");
+            }
+
+            Empresa empresaUsuario = usuario.getEmpresa();
+            if (empresaUsuario != null && empresaUsuario.getEstado() != Empresa.Estado.Activo) {
+                throw new RuntimeException("La empresa asociada está inactiva. Contacte al administrador.");
+            }
+
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("rol", "ROLE_USUARIO");
+            claims.put("id", usuario.getIdUsuario());
+            claims.put("nombre", usuario.getNombres());
+            claims.put("estado", usuario.getEstado());
+            claims.put("empresa_id", usuario.getEmpresa().getIdEmpresa());
+
+            String token = jwtUtil.generarToken(username, claims);
+
+            return LoginResponseDto.builder()
+                    .token(token)
+                    .usuario(usuario.getNombres())
+                    .rol("ROLE_USUARIO")
+                    .build();
         }
 
         throw new RuntimeException("Credenciales inválidas. Verifique nombre y clave.");
