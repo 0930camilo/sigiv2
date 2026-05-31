@@ -118,5 +118,46 @@ public ResponseEntity<byte[]> descargarFactura(@PathVariable Long id) {
         );
     }
 
+    @GetMapping("/usuario/{usuarioId}/ventas")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> listarVentasPorUsuario(
+            @PathVariable Long usuarioId,
+            @RequestParam(required = false) Long idVenta,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+
+        Page<VentasResponseDto> ventasPage;
+
+        if (idVenta != null) {
+            ventasPage = ventasService.buscarVentaPorIdYUsuario(
+                    usuarioId,
+                    idVenta,
+                    page,
+                    size
+            );
+        } else {
+            ventasPage = ventasService.listarVentasPorUsuarioPaginado(
+                    usuarioId,
+                    page,
+                    size
+            );
+        }
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("ventas", ventasPage.getContent());
+        data.put("totalElements", ventasPage.getTotalElements());
+        data.put("totalPages", ventasPage.getTotalPages());
+        data.put("currentPage", ventasPage.getNumber());
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        HttpStatus.OK.value(),
+                        "Ventas obtenidas correctamente",
+                        data
+                )
+        );
+    }
+
 
 }

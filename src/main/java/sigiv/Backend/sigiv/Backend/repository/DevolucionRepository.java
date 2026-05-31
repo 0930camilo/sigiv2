@@ -22,4 +22,16 @@ public interface DevolucionRepository extends JpaRepository<Devolucion, Long> {
 
     @Query("SELECT d FROM Devolucion d WHERE d.venta.idventa = :ventaId AND d.venta.usuario.empresa.idEmpresa = :empresaId")
     List<Devolucion> findByVentaIdAndEmpresaId(@Param("ventaId") Long ventaId, @Param("empresaId") Long empresaId);
+
+    @Query("SELECT d FROM Devolucion d WHERE d.venta.usuario.empresa.idEmpresa = :empresaId AND d.venta.usuario.idUsuario = :usuarioId")
+    Page<Devolucion> findByEmpresaIdAndUsuarioId(
+            @Param("empresaId") Long empresaId,
+            @Param("usuarioId") Long usuarioId,
+            Pageable pageable);
+
+    @Query("SELECT d FROM Devolucion d WHERE d.venta.idventa = :ventaId AND d.venta.usuario.empresa.idEmpresa = :empresaId AND d.venta.usuario.idUsuario = :usuarioId")
+    List<Devolucion> findByVentaIdAndEmpresaIdAndUsuarioId(
+            @Param("ventaId") Long ventaId,
+            @Param("empresaId") Long empresaId,
+            @Param("usuarioId") Long usuarioId);
 }

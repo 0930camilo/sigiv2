@@ -10,6 +10,6 @@ import sigiv.Backend.sigiv.Backend.dto.devol.DevolucionResponseDto;
 public interface DevolucionService {
     DevolucionResponseDto registrarDevolucion(DevolucionRequestDto dto);
     List<DevolucionResponseDto> listarDevolucionesPorVenta(Long ventaId);
-    List<DevolucionResponseDto> listarDevolucionesPorEmpresa(Long empresaId, Long ventaId);
-    Page<DevolucionResponseDto> listarDevolucionesPorEmpresaPaginado(Long empresaId, int page, int size);
+    List<DevolucionResponseDto> listarDevolucionesPorEmpresa(Long empresaId, Long ventaId, Long usuarioId);
+    Page<DevolucionResponseDto> listarDevolucionesPorEmpresaPaginado(Long empresaId, int page, int size, Long usuarioId);
 }

@@ -44,4 +44,17 @@ public interface VentasService {
         String fechaFin
     );
 
+    Page<VentasResponseDto> listarVentasPorUsuarioPaginado(
+            Long usuarioId,
+            int page,
+            int size
+    );
+
+    Page<VentasResponseDto> buscarVentaPorIdYUsuario(
+            Long usuarioId,
+            Long idVenta,
+            int page,
+            int size
+    );
+
 }

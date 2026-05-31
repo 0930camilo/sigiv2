@@ -105,9 +105,11 @@ public class DevolucionServiceImpl implements DevolucionService {
     }
 
     @Override
-    public List<DevolucionResponseDto> listarDevolucionesPorEmpresa(Long empresaId, Long ventaId) {
+    public List<DevolucionResponseDto> listarDevolucionesPorEmpresa(Long empresaId, Long ventaId, Long usuarioId) {
         List<Devolucion> devoluciones;
-        if (ventaId != null) {
+        if (ventaId != null && usuarioId != null) {
+            devoluciones = devolucionRepository.findByVentaIdAndEmpresaIdAndUsuarioId(ventaId, empresaId, usuarioId);
+        } else if (ventaId != null) {
             devoluciones = devolucionRepository.findByVentaIdAndEmpresaId(ventaId, empresaId);
         } else {
             devoluciones = devolucionRepository.findByEmpresaId(empresaId);
@@ -118,7 +120,12 @@ public class DevolucionServiceImpl implements DevolucionService {
     }
 
     @Override
-    public Page<DevolucionResponseDto> listarDevolucionesPorEmpresaPaginado(Long empresaId, int page, int size) {
+    public Page<DevolucionResponseDto> listarDevolucionesPorEmpresaPaginado(Long empresaId, int page, int size, Long usuarioId) {
+        if (usuarioId != null) {
+            return devolucionRepository.findByEmpresaIdAndUsuarioId(empresaId, usuarioId, PageRequest.of(page, size))
+                    .map(this::mapToDto);
+        }
+
         return devolucionRepository.findByEmpresaId(empresaId, PageRequest.of(page, size))
                 .map(this::mapToDto);
     }

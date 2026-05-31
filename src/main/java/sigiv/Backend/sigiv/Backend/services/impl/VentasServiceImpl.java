@@ -237,7 +237,7 @@ public byte[] generarFacturaPdf(Long id) {
         // 🏢 INFORMACIÓN DE LA EMPRESA
         // ===============================
 
-        document.add(new Paragraph(empresa.getNombreEmpresa(), empresaFont));
+        document.add(new Paragraph("Empresa: " + empresa.getNombreEmpresa(), empresaFont));
         document.add(new Paragraph("NIT: " + empresa.getNit(), normalFont));
         document.add(new Paragraph("Dirección: " + empresa.getDireccion(), normalFont));
         document.add(new Paragraph("Teléfono: " + formatoNumero.format(empresa.getTelefono()), normalFont));
@@ -327,6 +327,38 @@ public List<ResumenVendedorDto> resumenVentasPorUsuario(
     }
 
     return resumen;
+}
+
+@Override
+public Page<VentasResponseDto> listarVentasPorUsuarioPaginado(
+        Long usuarioId,
+        int page,
+        int size
+) {
+    Page<Ventas> ventasPage = ventasRepository.findVentasByUsuario(
+            usuarioId,
+            PageRequest.of(page, size)
+    );
+
+    return ventasPage.map(ventasMapper::toDto);
+}
+
+@Override
+public Page<VentasResponseDto> buscarVentaPorIdYUsuario(
+        Long usuarioId,
+        Long idVenta,
+        int page,
+        int size
+) {
+    Pageable pageable = PageRequest.of(page, size);
+
+    Page<Ventas> ventasPage = ventasRepository.findByIdventaAndUsuarioIdUsuario(
+            idVenta,
+            usuarioId,
+            pageable
+    );
+
+    return ventasPage.map(ventasMapper::toDto);
 }
 
 

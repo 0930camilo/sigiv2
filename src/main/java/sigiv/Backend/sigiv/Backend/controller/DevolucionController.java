@@ -41,11 +41,12 @@ public class DevolucionController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> listarPorEmpresa(
             @PathVariable Long empresaId,
             @RequestParam(required = false) Long ventaId,
+            @RequestParam(required = false) Long usuarioId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         if (ventaId != null) {
-            List<DevolucionResponseDto> devoluciones = devolucionService.listarDevolucionesPorEmpresa(empresaId, ventaId);
+            List<DevolucionResponseDto> devoluciones = devolucionService.listarDevolucionesPorEmpresa(empresaId, ventaId, usuarioId);
             Map<String, Object> data = new HashMap<>();
             data.put("devoluciones", devoluciones);
             data.put("totalElements", devoluciones.size());
@@ -57,7 +58,7 @@ public class DevolucionController {
             );
         }
 
-        Page<DevolucionResponseDto> devolucionesPage = devolucionService.listarDevolucionesPorEmpresaPaginado(empresaId, page, size);
+        Page<DevolucionResponseDto> devolucionesPage = devolucionService.listarDevolucionesPorEmpresaPaginado(empresaId, page, size, usuarioId);
 
         Map<String, Object> data = new HashMap<>();
         data.put("devoluciones", devolucionesPage.getContent());

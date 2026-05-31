@@ -129,6 +129,22 @@ Page<Ventas> findByIdventaAndUsuarioEmpresaIdEmpresa(
         Pageable pageable
 );
 
+@Query("""
+    SELECT v
+    FROM Ventas v
+    WHERE v.usuario.idUsuario = :usuarioId
+""")
+Page<Ventas> findVentasByUsuario(
+        @Param("usuarioId") Long usuarioId,
+        Pageable pageable
+);
+
+Page<Ventas> findByIdventaAndUsuarioIdUsuario(
+        Long idventa,
+        Long usuarioId,
+        Pageable pageable
+);
+
     @Query("""
         SELECT u.nombres, COUNT(v), COALESCE(SUM(v.total), 0)
         FROM Ventas v
