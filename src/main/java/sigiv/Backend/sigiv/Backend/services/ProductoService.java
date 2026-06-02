@@ -4,8 +4,11 @@ package sigiv.Backend.sigiv.Backend.services;
 
 
 
+import java.io.InputStream;
+
 import org.springframework.data.domain.Page;
 
+import sigiv.Backend.sigiv.Backend.dto.produc.ProductoImportResultDto;
 import sigiv.Backend.sigiv.Backend.dto.produc.ProductoRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.produc.ProductoResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Producto;
@@ -28,4 +31,6 @@ Page<ProductoResponseDto> productosPorEmpresa(
         String categoria,
         String proveedor
 );
+
+    ProductoImportResultDto importarDesdeExcel(InputStream inputStream);
 }

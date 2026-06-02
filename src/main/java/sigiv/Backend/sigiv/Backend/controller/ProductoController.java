@@ -1,11 +1,14 @@
 package sigiv.Backend.sigiv.Backend.controller;
 
-
+import java.io.InputStream;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import sigiv.Backend.sigiv.Backend.dto.produc.ProductoImportResultDto;
 import sigiv.Backend.sigiv.Backend.entity.Producto;
 import lombok.RequiredArgsConstructor;
 import sigiv.Backend.sigiv.Backend.dto.produc.ProductoRequestDto;
@@ -95,6 +98,48 @@ public ResponseEntity<ApiResponse<Object>> listarProductosEmpresa(
                     data
             )
     );
+}
+
+/**
+ * POST /productos/importar-excel
+ * Carga masiva de productos desde un archivo Excel.
+ * Formato multipart/form-data, campo "archivo".
+ */
+@PostMapping("/importar-excel")
+public ResponseEntity<ApiResponse<ProductoImportResultDto>> importarDesdeExcel(
+        @RequestParam("archivo") MultipartFile archivo) {
+    try {
+        if (archivo.isEmpty()) {
+            return ResponseEntity.badRequest().body(
+                    new ApiResponse<>(false, HttpStatus.BAD_REQUEST.value(),
+                            "El archivo está vacío", null));
+        }
+
+        String contentType = archivo.getContentType();
+        if (contentType == null ||
+                (!contentType.contains("spreadsheetml") &&
+                 !contentType.contains("excel") &&
+                 !contentType.contains("octet-stream"))) {
+            return ResponseEntity.badRequest().body(
+                    new ApiResponse<>(false, HttpStatus.BAD_REQUEST.value(),
+                            "El archivo debe ser un Excel (.xlsx o .xls)", null));
+        }
+
+        InputStream is = archivo.getInputStream();
+        ProductoImportResultDto resultado = productoService.importarDesdeExcel(is);
+
+        String mensaje = String.format(
+                "Importación finalizada: %d procesadas, %d exitosas, %d con error",
+                resultado.getTotalFilas(), resultado.getExitosos(), resultado.getFallidos());
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(), mensaje, resultado));
+
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                new ApiResponse<>(false, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                        "Error al procesar el archivo: " + e.getMessage(), null));
+    }
 }
 
 }
