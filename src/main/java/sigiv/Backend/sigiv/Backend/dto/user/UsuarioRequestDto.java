@@ -11,6 +11,8 @@ import sigiv.Backend.sigiv.Backend.entity.Usuario;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UsuarioRequestDto {
+    private Long idUsuario;
+    private String documento;
     private String nombres;
     private String clave;
     private Long telefono;

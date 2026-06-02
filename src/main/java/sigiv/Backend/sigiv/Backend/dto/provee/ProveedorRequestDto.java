@@ -13,6 +13,7 @@ import sigiv.Backend.sigiv.Backend.entity.Proveedor;
 @AllArgsConstructor
 public class ProveedorRequestDto {
     private Long idProveedor;
+    private String documento;
     private String nombre;
     private Long telefono;
     private String direccion;

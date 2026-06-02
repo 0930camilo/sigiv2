@@ -10,6 +10,7 @@ public class UsuarioMapper {
         if (u == null) return null;
         return new UsuarioResponseDto(
             u.getIdUsuario(),
+            u.getDocumento(),
             u.getNombres(),
             u.getDireccion(),
             u.getTelefono(),
@@ -25,6 +26,7 @@ public class UsuarioMapper {
     }
 
     public static void updateEntityFromDto(UsuarioRequestDto dto, Usuario entity, Empresa empresa) {
+        if (dto.getDocumento() != null) entity.setDocumento(dto.getDocumento());
         if (dto.getNombres() != null) entity.setNombres(dto.getNombres());
         // La clave NO se actualiza aquí, se maneja en el servicio con encriptación
         if (dto.getTelefono() != null) entity.setTelefono(dto.getTelefono());

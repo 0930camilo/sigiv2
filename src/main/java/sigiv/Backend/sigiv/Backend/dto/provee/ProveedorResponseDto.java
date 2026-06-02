@@ -14,6 +14,7 @@ import sigiv.Backend.sigiv.Backend.entity.Proveedor;
 public class ProveedorResponseDto {
 
     private Long idProveedor;
+    private String documento;
     private String nombre;
     private Long telefono;
     private String direccion;

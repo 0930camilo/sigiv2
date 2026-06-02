@@ -11,6 +11,7 @@ public class ProveedorMapper {
         if (p == null) return null;
         return new ProveedorResponseDto(
             p.getIdproveedor(),
+            p.getDocumento(),
             p.getNombre(),
             p.getTelefono(),
             p.getDireccion(),
@@ -27,6 +28,7 @@ public class ProveedorMapper {
     }
 
   public static void updateEntityFromDto(ProveedorRequestDto dto, Proveedor entity, Empresa empresa) {
+    if (dto.getDocumento() != null) entity.setDocumento(dto.getDocumento());
     if (dto.getNombre() != null) entity.setNombre(dto.getNombre());
     if (dto.getTelefono() != null) entity.setTelefono(dto.getTelefono());
     if (dto.getDireccion() != null) entity.setDireccion(dto.getDireccion());

@@ -27,6 +27,7 @@ public class Proveedor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idproveedor;
 
+    private String documento;
     private String nombre;
     private long telefono;
     private String direccion;
