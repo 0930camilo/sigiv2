@@ -37,5 +37,34 @@ Page<Usuario> findByEmpresa_IdEmpresaAndEstadoAndNombresContainingIgnoreCase(
         String nombres,
         Pageable pageable
 );
+
+Page<Usuario> findByEmpresa_IdEmpresaAndDocumentoContainingIgnoreCase(
+        Long empresaId,
+        String documento,
+        Pageable pageable
+);
+
+Page<Usuario> findByEmpresa_IdEmpresaAndEstadoAndDocumentoContainingIgnoreCase(
+        Long empresaId,
+        Usuario.Estado estado,
+        String documento,
+        Pageable pageable
+);
+
+Page<Usuario> findByEmpresa_IdEmpresaAndNombresContainingIgnoreCaseAndDocumentoContainingIgnoreCase(
+        Long empresaId,
+        String nombres,
+        String documento,
+        Pageable pageable
+);
+
+Page<Usuario> findByEmpresa_IdEmpresaAndEstadoAndNombresContainingIgnoreCaseAndDocumentoContainingIgnoreCase(
+        Long empresaId,
+        Usuario.Estado estado,
+        String nombres,
+        String documento,
+        Pageable pageable
+);
+
     List<Usuario> findByNombresContainingIgnoreCase(String nombres);
 }

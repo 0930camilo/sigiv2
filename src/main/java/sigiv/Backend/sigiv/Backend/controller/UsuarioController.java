@@ -50,10 +50,11 @@ public class UsuarioController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Usuario.Estado estado,
-            @RequestParam(required = false) String nombres
+            @RequestParam(required = false) String nombres,
+            @RequestParam(required = false) String documento
         ) {
 
-        Page<UsuarioResponseDto> usuariosPage = usuarioService.listarUsuariosPorEmpresa(empresaId, page, size, estado, nombres);
+        Page<UsuarioResponseDto> usuariosPage = usuarioService.listarUsuariosPorEmpresa(empresaId, page, size, estado, nombres, documento);
 
         Map<String, Object> data = new HashMap<>();
         data.put("usuarios", usuariosPage.getContent());

@@ -23,7 +23,8 @@ public interface ProveedorService {
         int page,
         int size,
         Proveedor.Estado estado,
-        String nombre
+        String nombre,
+        String documento
 );
 }
   

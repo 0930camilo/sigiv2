@@ -82,7 +82,8 @@ public class ProveedorController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Proveedor.Estado estado,
-            @RequestParam(required = false) String nombre
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) String documento
     ) {
 
         Page<ProveedorResponseDto> proveedoresPage =
@@ -91,7 +92,8 @@ public class ProveedorController {
                         page,
                         size,
                         estado,
-                        nombre
+                        nombre,
+                        documento
                 );
 
         Map<String, Object> data = new HashMap<>();

@@ -16,7 +16,7 @@ public interface UsuarioService {
     void eliminarUsuario(Long id);
 
 
-    Page<UsuarioResponseDto> listarUsuariosPorEmpresa(Long empresaId, int page, int size, Usuario.Estado estado, String nombres);
+    Page<UsuarioResponseDto> listarUsuariosPorEmpresa(Long empresaId, int page, int size, Usuario.Estado estado, String nombres, String documento);
 
 
 

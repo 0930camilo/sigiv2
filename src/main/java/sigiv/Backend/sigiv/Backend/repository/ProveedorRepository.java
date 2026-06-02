@@ -33,4 +33,32 @@ Page<Proveedor> findByEmpresa_IdEmpresaAndEstadoAndNombreContainingIgnoreCase(
         Pageable pageable
 );
 
+Page<Proveedor> findByEmpresa_IdEmpresaAndDocumentoContainingIgnoreCase(
+        Long empresaId,
+        String documento,
+        Pageable pageable
+);
+
+Page<Proveedor> findByEmpresa_IdEmpresaAndEstadoAndDocumentoContainingIgnoreCase(
+        Long empresaId,
+        Proveedor.Estado estado,
+        String documento,
+        Pageable pageable
+);
+
+Page<Proveedor> findByEmpresa_IdEmpresaAndNombreContainingIgnoreCaseAndDocumentoContainingIgnoreCase(
+        Long empresaId,
+        String nombre,
+        String documento,
+        Pageable pageable
+);
+
+Page<Proveedor> findByEmpresa_IdEmpresaAndEstadoAndNombreContainingIgnoreCaseAndDocumentoContainingIgnoreCase(
+        Long empresaId,
+        Proveedor.Estado estado,
+        String nombre,
+        String documento,
+        Pageable pageable
+);
+
 }

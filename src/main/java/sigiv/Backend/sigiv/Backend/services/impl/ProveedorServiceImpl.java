@@ -86,7 +86,8 @@ public Page<ProveedorResponseDto> listarProveedoresPorEmpresa(
         int page,
         int size,
         Proveedor.Estado estado,
-        String nombre
+        String nombre,
+        String documento
 ) {
 
     Pageable pageable = PageRequest.of(page, size, Sort.by("idproveedor").ascending());
@@ -94,12 +95,25 @@ public Page<ProveedorResponseDto> listarProveedoresPorEmpresa(
     Page<Proveedor> proveedoresPage;
 
     boolean tieneNombre = nombre != null && !nombre.trim().isEmpty();
+    boolean tieneDocumento = documento != null && !documento.trim().isEmpty();
 
-    if (estado != null && tieneNombre) {
+    if (estado != null && tieneNombre && tieneDocumento) {
+
+        proveedoresPage = proveedorRepository
+                .findByEmpresa_IdEmpresaAndEstadoAndNombreContainingIgnoreCaseAndDocumentoContainingIgnoreCase(
+                        empresaId, estado, nombre, documento, pageable);
+
+    } else if (estado != null && tieneNombre) {
 
         proveedoresPage = proveedorRepository
                 .findByEmpresa_IdEmpresaAndEstadoAndNombreContainingIgnoreCase(
                         empresaId, estado, nombre, pageable);
+
+    } else if (estado != null && tieneDocumento) {
+
+        proveedoresPage = proveedorRepository
+                .findByEmpresa_IdEmpresaAndEstadoAndDocumentoContainingIgnoreCase(
+                        empresaId, estado, documento, pageable);
 
     } else if (estado != null) {
 
@@ -107,11 +121,23 @@ public Page<ProveedorResponseDto> listarProveedoresPorEmpresa(
                 .findByEmpresa_IdEmpresaAndEstado(
                         empresaId, estado, pageable);
 
+    } else if (tieneNombre && tieneDocumento) {
+
+        proveedoresPage = proveedorRepository
+                .findByEmpresa_IdEmpresaAndNombreContainingIgnoreCaseAndDocumentoContainingIgnoreCase(
+                        empresaId, nombre, documento, pageable);
+
     } else if (tieneNombre) {
 
         proveedoresPage = proveedorRepository
                 .findByEmpresa_IdEmpresaAndNombreContainingIgnoreCase(
                         empresaId, nombre, pageable);
+
+    } else if (tieneDocumento) {
+
+        proveedoresPage = proveedorRepository
+                .findByEmpresa_IdEmpresaAndDocumentoContainingIgnoreCase(
+                        empresaId, documento, pageable);
 
     } else {
 

@@ -108,7 +108,8 @@ public Page<UsuarioResponseDto> listarUsuariosPorEmpresa(
         int page,
         int size,
         Usuario.Estado estado,
-        String nombres
+        String nombres,
+        String documento
 ) {
 
     Pageable pageable = PageRequest.of(page, size, Sort.by("idUsuario").ascending());
@@ -116,12 +117,25 @@ public Page<UsuarioResponseDto> listarUsuariosPorEmpresa(
     Page<Usuario> usuariosPage;
 
     boolean tieneNombre = nombres != null && !nombres.trim().isEmpty();
+    boolean tieneDocumento = documento != null && !documento.trim().isEmpty();
 
-    if (estado != null && tieneNombre) {
+    if (estado != null && tieneNombre && tieneDocumento) {
+
+        usuariosPage = usuarioRepository
+                .findByEmpresa_IdEmpresaAndEstadoAndNombresContainingIgnoreCaseAndDocumentoContainingIgnoreCase(
+                        empresaId, estado, nombres, documento, pageable);
+
+    } else if (estado != null && tieneNombre) {
 
         usuariosPage = usuarioRepository
                 .findByEmpresa_IdEmpresaAndEstadoAndNombresContainingIgnoreCase(
                         empresaId, estado, nombres, pageable);
+
+    } else if (estado != null && tieneDocumento) {
+
+        usuariosPage = usuarioRepository
+                .findByEmpresa_IdEmpresaAndEstadoAndDocumentoContainingIgnoreCase(
+                        empresaId, estado, documento, pageable);
 
     } else if (estado != null) {
 
@@ -129,11 +143,23 @@ public Page<UsuarioResponseDto> listarUsuariosPorEmpresa(
                 .findByEmpresa_IdEmpresaAndEstado(
                         empresaId, estado, pageable);
 
+    } else if (tieneNombre && tieneDocumento) {
+
+        usuariosPage = usuarioRepository
+                .findByEmpresa_IdEmpresaAndNombresContainingIgnoreCaseAndDocumentoContainingIgnoreCase(
+                        empresaId, nombres, documento, pageable);
+
     } else if (tieneNombre) {
 
         usuariosPage = usuarioRepository
                 .findByEmpresa_IdEmpresaAndNombresContainingIgnoreCase(
                         empresaId, nombres, pageable);
+
+    } else if (tieneDocumento) {
+
+        usuariosPage = usuarioRepository
+                .findByEmpresa_IdEmpresaAndDocumentoContainingIgnoreCase(
+                        empresaId, documento, pageable);
 
     } else {
 
