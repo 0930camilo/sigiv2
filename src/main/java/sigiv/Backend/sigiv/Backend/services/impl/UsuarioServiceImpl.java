@@ -112,7 +112,7 @@ public Page<UsuarioResponseDto> listarUsuariosPorEmpresa(
         String documento
 ) {
 
-    Pageable pageable = PageRequest.of(page, size, Sort.by("idUsuario").ascending());
+    Pageable pageable = PageRequest.of(page, size, Sort.by("idUsuario").descending());
 
     Page<Usuario> usuariosPage;
 

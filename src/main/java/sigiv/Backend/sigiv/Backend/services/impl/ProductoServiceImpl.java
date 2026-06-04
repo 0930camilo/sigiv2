@@ -128,7 +128,7 @@ public Page<ProductoResponseDto> productosPorEmpresa(
         String proveedor
 ) {
 
-    Pageable pageable = PageRequest.of(page, size, Sort.by("idproducto").ascending());
+    Pageable pageable = PageRequest.of(page, size, Sort.by("idproducto").descending());
 
     Page<Producto> productosPage =
             productoRepository.buscarProductosConFiltros(

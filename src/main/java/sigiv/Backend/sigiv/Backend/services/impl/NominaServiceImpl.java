@@ -3,6 +3,7 @@ package sigiv.Backend.sigiv.Backend.services.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import sigiv.Backend.sigiv.Backend.dto.nomina.NominaRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.nomina.NominaResponseDto;
@@ -113,7 +114,7 @@ public class NominaServiceImpl implements NominaService {
 
     @Override
     public Page<NominaResponseDto> listarPorEmpresaPaginado(Long empresaId, int page, int size) {
-        Page<Nomina> nominasPage = nominaRepository.findByEmpresaIdEmpresa(empresaId, PageRequest.of(page, size));
+        Page<Nomina> nominasPage = nominaRepository.findByEmpresaIdEmpresa(empresaId, PageRequest.of(page, size, Sort.by("idnomina").descending()));
         return nominasPage.map(nomina -> {
             BigDecimal total = personaNominaRepository.calcularTotalPorNomina(nomina.getIdnomina());
             nomina.setTotalPago(total != null ? total : BigDecimal.ZERO);

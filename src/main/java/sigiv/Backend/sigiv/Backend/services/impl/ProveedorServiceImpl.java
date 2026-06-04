@@ -90,7 +90,7 @@ public Page<ProveedorResponseDto> listarProveedoresPorEmpresa(
         String documento
 ) {
 
-    Pageable pageable = PageRequest.of(page, size, Sort.by("idproveedor").ascending());
+    Pageable pageable = PageRequest.of(page, size, Sort.by("idproveedor").descending());
 
     Page<Proveedor> proveedoresPage;
 

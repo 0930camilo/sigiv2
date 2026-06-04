@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -89,13 +90,13 @@ public class PersonaServiceImpl implements PersonaService {
 
     @Override
     public Page<PersonaResponseDto> listarPorEmpresaPaginado(Long empresaId, int page, int size) {
-        return personaRepository.findByEmpresaIdEmpresa(empresaId, PageRequest.of(page, size))
+        return personaRepository.findByEmpresaIdEmpresa(empresaId, PageRequest.of(page, size, Sort.by("idpersona").descending()))
                 .map(PersonaMapper::toDto);
     }
 
     @Override
     public Page<PersonaResponseDto> filtrarPorEmpresa(Long empresaId, Persona.Estado estado, String documento, String nombre, int page, int size) {
-        return personaRepository.filtrarPorEmpresa(empresaId, estado, documento, nombre, PageRequest.of(page, size))
+        return personaRepository.filtrarPorEmpresa(empresaId, estado, documento, nombre, PageRequest.of(page, size, Sort.by("idpersona").descending()))
                 .map(PersonaMapper::toDto);
     }
 

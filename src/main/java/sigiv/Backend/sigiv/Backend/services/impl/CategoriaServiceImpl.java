@@ -78,7 +78,7 @@ public class CategoriaServiceImpl implements CategoriaService {
             String nombre
     ) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("idcategoria").ascending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("idcategoria").descending());
 
         boolean tieneNombre = nombre != null && !nombre.trim().isEmpty();
 
