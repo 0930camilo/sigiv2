@@ -1,5 +1,6 @@
 package sigiv.Backend.sigiv.Backend.services.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -7,11 +8,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DataValidation;
+import org.apache.poi.ss.usermodel.DataValidationConstraint;
+import org.apache.poi.ss.usermodel.DataValidationHelper;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.util.CellRangeAddressList;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,11 +29,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import sigiv.Backend.sigiv.Backend.dto.catego.CategoriaResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.mapper.ProductoMapper;
 import sigiv.Backend.sigiv.Backend.dto.produc.ProductoImportResultDto;
 import sigiv.Backend.sigiv.Backend.dto.produc.ProductoImportResultDto.FilaError;
 import sigiv.Backend.sigiv.Backend.dto.produc.ProductoRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.produc.ProductoResponseDto;
+import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Producto;
 import sigiv.Backend.sigiv.Backend.entity.Proveedor;
 import sigiv.Backend.sigiv.Backend.entity.Categoria;
@@ -31,7 +43,9 @@ import sigiv.Backend.sigiv.Backend.exception.ResourceNotFoundException;
 import sigiv.Backend.sigiv.Backend.repository.ProductoRepository;
 import sigiv.Backend.sigiv.Backend.repository.ProveedorRepository;
 import sigiv.Backend.sigiv.Backend.repository.CategoriaRepository;
+import sigiv.Backend.sigiv.Backend.services.CategoriaService;
 import sigiv.Backend.sigiv.Backend.services.ProductoService;
+import sigiv.Backend.sigiv.Backend.services.ProveedorService;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +54,8 @@ public class ProductoServiceImpl implements ProductoService {
     private final ProductoRepository productoRepository;
     private final ProveedorRepository proveedorRepository;
     private final CategoriaRepository categoriaRepository;
+    private final CategoriaService categoriaService;
+    private final ProveedorService proveedorService;
 
     // Crear producto
     @Override
@@ -183,24 +199,30 @@ public ProductoImportResultDto importarDesdeExcel(InputStream inputStream) {
                     }
                 }
 
-                Long proveedorId = leerLong(row, 6);
-                Long categoriaId = leerLong(row, 7);
-                if (categoriaId == null)
+                // Leer proveedorId (puede ser "ID - Nombre" o solo ID)
+                String proveedorStr = leerTexto(row, 6);
+                final Long proveedorIdFinal = (proveedorStr != null && !proveedorStr.isBlank())
+                        ? extraerIdDeTexto(proveedorStr) : null;
+
+                // Leer categoriaId (puede ser "ID - Nombre" o solo ID)
+                String categoriaStr = leerTexto(row, 7);
+                if (categoriaStr == null || categoriaStr.isBlank())
                     throw new IllegalArgumentException("El campo 'categoriaId' es obligatorio");
+                final Long categoriaIdFinal = extraerIdDeTexto(categoriaStr);
 
                 Proveedor proveedor = null;
-                if (proveedorId != null) {
-                    proveedor = proveedorRepository.findById(proveedorId)
-                            .orElseThrow(() -> new IllegalArgumentException("Proveedor con id " + proveedorId + " no encontrado"));
+                if (proveedorIdFinal != null) {
+                    proveedor = proveedorRepository.findById(proveedorIdFinal)
+                            .orElseThrow(() -> new IllegalArgumentException("Proveedor con id " + proveedorIdFinal + " no encontrado"));
                 }
 
-                Categoria categoria = categoriaRepository.findById(categoriaId)
-                        .orElseThrow(() -> new IllegalArgumentException("Categoría con id " + categoriaId + " no encontrada"));
+                Categoria categoria = categoriaRepository.findById(categoriaIdFinal)
+                        .orElseThrow(() -> new IllegalArgumentException("Categoría con id " + categoriaIdFinal + " no encontrada"));
 
                 ProductoRequestDto dto = new ProductoRequestDto(
                         null, nombre, descripcion, cantidad,
                         precioCompra, precio, LocalDateTime.now(),
-                        estado, proveedorId, categoriaId
+                        estado, proveedorIdFinal, categoriaIdFinal
                 );
 
                 Producto producto = ProductoMapper.toEntityForCreate(dto, proveedor, categoria);
@@ -267,5 +289,134 @@ private Long leerLong(Row row, int col) {
         try { return Long.parseLong(cell.getStringCellValue().trim()); } catch (NumberFormatException e) { return null; }
     }
     return null;
+}
+
+/**
+ * Extrae el ID de un texto con formato "ID - Nombre" o solo "ID".
+ * Ejemplos: "1 - Electrónica" -> 1, "25" -> 25
+ */
+private Long extraerIdDeTexto(String texto) {
+    if (texto == null || texto.isBlank()) return null;
+
+    texto = texto.trim();
+
+    // Si contiene " - ", extraer solo la parte del ID antes del guion
+    if (texto.contains(" - ")) {
+        String idParte = texto.split(" - ")[0].trim();
+        try {
+            return Long.parseLong(idParte);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Formato inválido: '" + texto + "'. Se esperaba 'ID - Nombre' o solo 'ID'");
+        }
+    }
+
+    // Si no contiene " - ", intentar parsear directamente como número
+    try {
+        return Long.parseLong(texto);
+    } catch (NumberFormatException e) {
+        throw new IllegalArgumentException("Formato inválido: '" + texto + "'. Se esperaba 'ID - Nombre' o solo 'ID'");
+    }
+}
+
+/**
+ * Genera una plantilla Excel para importación masiva de productos.
+ * Incluye las categorías de la empresa como validación de datos en la columna H.
+ */
+@Override
+public byte[] generarPlantillaExcel(Long empresaId) throws Exception {
+    // Obtener todas las categorías activas de la empresa
+    Page<CategoriaResponseDto> categoriasPage = categoriaService.listarCategoriasPorEmpresa(
+            empresaId, 0, Integer.MAX_VALUE, Categoria.Estado.Activo, null);
+    List<CategoriaResponseDto> categorias = categoriasPage.getContent();
+
+    if (categorias.isEmpty()) {
+        throw new IllegalArgumentException("La empresa no tiene categorías activas. Debe crear al menos una categoría antes de generar la plantilla.");
+    }
+
+    // Obtener todos los proveedores activos de la empresa
+    Page<ProveedorResponseDto> proveedoresPage = proveedorService.listarProveedoresPorEmpresa(
+            empresaId, 0, Integer.MAX_VALUE, Proveedor.Estado.Activo, null, null);
+    List<ProveedorResponseDto> proveedores = proveedoresPage.getContent();
+
+    try (Workbook workbook = new XSSFWorkbook()) {
+        Sheet sheet = workbook.createSheet("Productos");
+
+        // Estilo para encabezados
+        CellStyle headerStyle = workbook.createCellStyle();
+        headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        Font headerFont = workbook.createFont();
+        headerFont.setBold(true);
+        headerStyle.setFont(headerFont);
+
+        // Crear encabezados
+        Row headerRow = sheet.createRow(0);
+        String[] headers = {"nombre", "descripcion", "cantidad", "precioCompra", "precio",
+                           "estado", "proveedorId", "categoriaId"};
+
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+            sheet.setColumnWidth(i, 4000);
+        }
+
+        // Crear hoja oculta con las categorías
+        Sheet categoriasSheet = workbook.createSheet("Categorias");
+        workbook.setSheetHidden(1, true);
+
+        for (int i = 0; i < categorias.size(); i++) {
+            Row row = categoriasSheet.createRow(i);
+            CategoriaResponseDto cat = categorias.get(i);
+            row.createCell(0).setCellValue(cat.getIdCategoria() + " - " + cat.getNombre());
+        }
+
+        // Crear hoja oculta con los proveedores (si existen)
+        if (!proveedores.isEmpty()) {
+            Sheet proveedoresSheet = workbook.createSheet("Proveedores");
+            workbook.setSheetHidden(2, true);
+
+            for (int i = 0; i < proveedores.size(); i++) {
+                Row row = proveedoresSheet.createRow(i);
+                ProveedorResponseDto prov = proveedores.get(i);
+                row.createCell(0).setCellValue(prov.getIdProveedor() + " - " + prov.getNombre());
+            }
+        }
+
+        // Crear validación de datos para la columna H (categoriaId)
+        DataValidationHelper validationHelper = sheet.getDataValidationHelper();
+        String formula = "Categorias!$A$1:$A$" + categorias.size();
+        DataValidationConstraint constraint = validationHelper.createFormulaListConstraint(formula);
+        CellRangeAddressList addressList = new CellRangeAddressList(1, 1000, 7, 7);
+        DataValidation validation = validationHelper.createValidation(constraint, addressList);
+        validation.setShowErrorBox(true);
+        validation.setErrorStyle(DataValidation.ErrorStyle.STOP);
+        validation.setEmptyCellAllowed(false);
+        sheet.addValidationData(validation);
+
+        // Crear validación para proveedorId (columna G) si hay proveedores
+        if (!proveedores.isEmpty()) {
+            String proveedorFormula = "Proveedores!$A$1:$A$" + proveedores.size();
+            DataValidationConstraint proveedorConstraint = validationHelper.createFormulaListConstraint(proveedorFormula);
+            CellRangeAddressList proveedorAddressList = new CellRangeAddressList(1, 1000, 6, 6);
+            DataValidation proveedorValidation = validationHelper.createValidation(proveedorConstraint, proveedorAddressList);
+            proveedorValidation.setShowErrorBox(true);
+            proveedorValidation.setEmptyCellAllowed(true);
+            sheet.addValidationData(proveedorValidation);
+        }
+
+        // Crear validación para estado (columna F)
+        DataValidationConstraint estadoConstraint = validationHelper.createExplicitListConstraint(
+                new String[]{"Activo", "Inactivo"});
+        CellRangeAddressList estadoAddressList = new CellRangeAddressList(1, 1000, 5, 5);
+        DataValidation estadoValidation = validationHelper.createValidation(estadoConstraint, estadoAddressList);
+        estadoValidation.setShowErrorBox(true);
+        sheet.addValidationData(estadoValidation);
+
+        // Generar archivo en memoria
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        workbook.write(baos);
+        return baos.toByteArray();
+    }
 }
 }

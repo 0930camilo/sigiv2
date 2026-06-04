@@ -33,4 +33,6 @@ Page<ProductoResponseDto> productosPorEmpresa(
 );
 
     ProductoImportResultDto importarDesdeExcel(InputStream inputStream);
+
+    byte[] generarPlantillaExcel(Long empresaId) throws Exception;
 }

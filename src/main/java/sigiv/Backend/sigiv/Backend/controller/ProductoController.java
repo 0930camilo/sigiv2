@@ -3,7 +3,9 @@ package sigiv.Backend.sigiv.Backend.controller;
 import java.io.InputStream;
 
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -139,6 +141,34 @@ public ResponseEntity<ApiResponse<ProductoImportResultDto>> importarDesdeExcel(
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                 new ApiResponse<>(false, HttpStatus.INTERNAL_SERVER_ERROR.value(),
                         "Error al procesar el archivo: " + e.getMessage(), null));
+    }
+}
+
+/**
+ * GET /productos/plantilla/empresa/{empresaId}
+ * Genera una plantilla Excel con las categorías de la empresa y la devuelve en base64.
+ */
+@GetMapping("/plantilla/empresa/{empresaId}")
+public ResponseEntity<?> descargarPlantillaExcel(@PathVariable Long empresaId) {
+    try {
+        byte[] excelBytes = productoService.generarPlantillaExcel(empresaId);
+        String base64 = java.util.Base64.getEncoder().encodeToString(excelBytes);
+
+        var data = new java.util.HashMap<String, Object>();
+        data.put("archivo", base64);
+        data.put("nombreArchivo", "plantilla_productos_empresa_" + empresaId + ".xlsx");
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Plantilla generada exitosamente", data));
+
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(
+                new ApiResponse<>(false, HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                new ApiResponse<>(false, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                        "Error al generar la plantilla: " + e.getMessage(), null));
     }
 }
 
