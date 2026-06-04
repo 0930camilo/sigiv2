@@ -44,7 +44,40 @@ public class ProductoController {
         );
     }
 
- 
+    @GetMapping("/codigo-barra/{codigoBarra}")
+    public ResponseEntity<ApiResponse<ProductoResponseDto>> obtenerPorCodigoBarra(@PathVariable String codigoBarra) {
+        ProductoResponseDto producto = productoService.obtenerPorCodigoBarra(codigoBarra);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Producto encontrado", producto)
+        );
+    }
+
+    @GetMapping("/codigo-barra/{codigoBarra}/imagen-base64")
+    public ResponseEntity<ApiResponse<Object>> obtenerImagenBase64PorCodigo(@PathVariable String codigoBarra) {
+        String base64 = productoService.obtenerCodigoBarraBase64PorCodigo(codigoBarra);
+        var data = new java.util.HashMap<String, Object>();
+        data.put("codigoBarra", codigoBarra);
+        data.put("imagenBase64", base64);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Imagen generada correctamente", data)
+        );
+    }
+
+    @GetMapping("/{id}/codigo-barra/imagen-base64")
+    public ResponseEntity<ApiResponse<Object>> obtenerImagenBase64PorId(@PathVariable Long id) {
+        String base64 = productoService.obtenerCodigoBarraBase64PorId(id);
+        var data = new java.util.HashMap<String, Object>();
+        data.put("idProducto", id);
+        data.put("imagenBase64", base64);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        "Imagen generada correctamente", data)
+        );
+    }
+
+
 
    
 

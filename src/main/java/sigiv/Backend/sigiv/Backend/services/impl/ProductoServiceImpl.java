@@ -46,6 +46,7 @@ import sigiv.Backend.sigiv.Backend.repository.CategoriaRepository;
 import sigiv.Backend.sigiv.Backend.services.CategoriaService;
 import sigiv.Backend.sigiv.Backend.services.ProductoService;
 import sigiv.Backend.sigiv.Backend.services.ProveedorService;
+import sigiv.Backend.sigiv.Backend.util.BarcodeUtil;
 
 @Service
 @RequiredArgsConstructor
@@ -69,6 +70,11 @@ public class ProductoServiceImpl implements ProductoService {
         Categoria categoria = categoriaRepository.findById(dto.getCategoriaId())
                 .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada"));
 
+        if (dto.getCodigoBarra() == null || dto.getCodigoBarra().isBlank()) {
+            dto.setCodigoBarra(generarCodigoBarraUnico());
+        }
+        validarCodigoBarraUnico(dto.getCodigoBarra(), null);
+
         Producto producto = ProductoMapper.toEntityForCreate(dto, proveedor, categoria);
         Producto guardado = productoRepository.save(producto);
         return ProductoMapper.toDto(guardado);
@@ -80,6 +86,35 @@ public class ProductoServiceImpl implements ProductoService {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto", "id", id));
         return ProductoMapper.toDto(producto);
+    }
+
+    @Override
+    public ProductoResponseDto obtenerPorCodigoBarra(String codigoBarra) {
+        if (codigoBarra == null || codigoBarra.isBlank()) {
+            throw new IllegalArgumentException("El código de barras es obligatorio");
+        }
+        Producto producto = productoRepository.findByCodigoBarra(codigoBarra.trim())
+                .orElseThrow(() -> new ResourceNotFoundException("Producto", "codigoBarra", codigoBarra));
+        return ProductoMapper.toDto(producto);
+    }
+
+    @Override
+    public String obtenerCodigoBarraBase64PorId(Long id) {
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto", "id", id));
+        String codigoBarra = asegurarCodigoBarra(producto);
+        return BarcodeUtil.generarCode128Base64(codigoBarra, 400, 120);
+    }
+
+    @Override
+    public String obtenerCodigoBarraBase64PorCodigo(String codigoBarra) {
+        if (codigoBarra == null || codigoBarra.isBlank()) {
+            throw new IllegalArgumentException("El código de barras es obligatorio");
+        }
+        String valor = codigoBarra.trim();
+        Producto producto = productoRepository.findByCodigoBarra(valor)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto", "codigoBarra", codigoBarra));
+        return BarcodeUtil.generarCode128Base64(producto.getCodigoBarra(), 400, 120);
     }
 
     // Actualizar producto
@@ -99,6 +134,8 @@ public class ProductoServiceImpl implements ProductoService {
             categoria = categoriaRepository.findById(dto.getCategoriaId())
                     .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada"));
         }
+
+        validarCodigoBarraUnico(dto.getCodigoBarra(), id);
 
         ProductoMapper.updateEntityFromDto(dto, producto, proveedor, categoria);
         Producto actualizado = productoRepository.save(producto);
@@ -152,15 +189,17 @@ public Page<ProductoResponseDto> productosPorEmpresa(
  *   C: cantidad      (entero, obligatorio)
  *   D: precioCompra  (decimal, obligatorio)
  *   E: precio        (decimal, obligatorio)
- *   F: estado        (Activo | Inactivo, opcional → defecto Activo)
- *   G: proveedorId   (número, opcional)
- *   H: categoriaId   (número, obligatorio)
+ *   F: codigoBarra   (texto, opcional, único)
+ *   G: estado        (Activo | Inactivo, opcional → defecto Activo)
+ *   H: proveedorId   (número, opcional)
+ *   I: categoriaId   (número, obligatorio)
  */
 @Override
 public ProductoImportResultDto importarDesdeExcel(InputStream inputStream) {
     List<FilaError> errores = new ArrayList<>();
     int exitosos = 0;
     int totalFilas = 0;
+    var codigosEnArchivo = new java.util.HashSet<String>();
 
     try (Workbook workbook = WorkbookFactory.create(inputStream)) {
         Sheet sheet = workbook.getSheetAt(0);
@@ -189,7 +228,26 @@ public ProductoImportResultDto importarDesdeExcel(InputStream inputStream) {
                 if (precio == null)
                     throw new IllegalArgumentException("El campo 'precio' es obligatorio");
 
-                String estadoStr = leerTexto(row, 5);
+                String codigoBarra = leerTexto(row, 5);
+                if (codigoBarra != null) {
+                    codigoBarra = codigoBarra.trim();
+                    if (!codigoBarra.isEmpty()) {
+                        if (!codigosEnArchivo.add(codigoBarra)) {
+                            throw new IllegalArgumentException("El código de barras está duplicado en el archivo: " + codigoBarra);
+                        }
+                        if (productoRepository.existsByCodigoBarra(codigoBarra)) {
+                            throw new IllegalArgumentException("El código de barras ya está en uso: " + codigoBarra);
+                        }
+                    } else {
+                        codigoBarra = null;
+                    }
+                }
+
+                if (codigoBarra == null) {
+                    codigoBarra = generarCodigoBarraUnico();
+                }
+
+                String estadoStr = leerTexto(row, 6);
                 Producto.Estado estado = Producto.Estado.Activo;
                 if (estadoStr != null && !estadoStr.isBlank()) {
                     try {
@@ -200,12 +258,12 @@ public ProductoImportResultDto importarDesdeExcel(InputStream inputStream) {
                 }
 
                 // Leer proveedorId (puede ser "ID - Nombre" o solo ID)
-                String proveedorStr = leerTexto(row, 6);
+                String proveedorStr = leerTexto(row, 7);
                 final Long proveedorIdFinal = (proveedorStr != null && !proveedorStr.isBlank())
                         ? extraerIdDeTexto(proveedorStr) : null;
 
                 // Leer categoriaId (puede ser "ID - Nombre" o solo ID)
-                String categoriaStr = leerTexto(row, 7);
+                String categoriaStr = leerTexto(row, 8);
                 if (categoriaStr == null || categoriaStr.isBlank())
                     throw new IllegalArgumentException("El campo 'categoriaId' es obligatorio");
                 final Long categoriaIdFinal = extraerIdDeTexto(categoriaStr);
@@ -222,7 +280,7 @@ public ProductoImportResultDto importarDesdeExcel(InputStream inputStream) {
                 ProductoRequestDto dto = new ProductoRequestDto(
                         null, nombre, descripcion, cantidad,
                         precioCompra, precio, LocalDateTime.now(),
-                        estado, proveedorIdFinal, categoriaIdFinal
+                        codigoBarra, estado, proveedorIdFinal, categoriaIdFinal
                 );
 
                 Producto producto = ProductoMapper.toEntityForCreate(dto, proveedor, categoria);
@@ -243,7 +301,7 @@ public ProductoImportResultDto importarDesdeExcel(InputStream inputStream) {
 // ───────── helpers ─────────
 
 private boolean esFilaVacia(Row row) {
-    for (int c = 0; c <= 7; c++) {
+    for (int c = 0; c <= 8; c++) {
         Cell cell = row.getCell(c);
         if (cell != null && cell.getCellType() != CellType.BLANK) return false;
     }
@@ -320,7 +378,7 @@ private Long extraerIdDeTexto(String texto) {
 
 /**
  * Genera una plantilla Excel para importación masiva de productos.
- * Incluye las categorías de la empresa como validación de datos en la columna H.
+ * Incluye las categorías de la empresa como validación de datos en la columna I.
  */
 @Override
 public byte[] generarPlantillaExcel(Long empresaId) throws Exception {
@@ -349,10 +407,10 @@ public byte[] generarPlantillaExcel(Long empresaId) throws Exception {
         headerFont.setBold(true);
         headerStyle.setFont(headerFont);
 
-        // Crear encabezados
+            // Crear encabezados
         Row headerRow = sheet.createRow(0);
         String[] headers = {"nombre", "descripcion", "cantidad", "precioCompra", "precio",
-                           "estado", "proveedorId", "categoriaId"};
+                                   "codigoBarra", "estado", "proveedorId", "categoriaId"};
 
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
@@ -383,32 +441,32 @@ public byte[] generarPlantillaExcel(Long empresaId) throws Exception {
             }
         }
 
-        // Crear validación de datos para la columna H (categoriaId)
+        // Crear validación de datos para la columna I (categoriaId)
         DataValidationHelper validationHelper = sheet.getDataValidationHelper();
         String formula = "Categorias!$A$1:$A$" + categorias.size();
         DataValidationConstraint constraint = validationHelper.createFormulaListConstraint(formula);
-        CellRangeAddressList addressList = new CellRangeAddressList(1, 1000, 7, 7);
+        CellRangeAddressList addressList = new CellRangeAddressList(1, 1000, 8, 8);
         DataValidation validation = validationHelper.createValidation(constraint, addressList);
         validation.setShowErrorBox(true);
         validation.setErrorStyle(DataValidation.ErrorStyle.STOP);
         validation.setEmptyCellAllowed(false);
         sheet.addValidationData(validation);
 
-        // Crear validación para proveedorId (columna G) si hay proveedores
+        // Crear validación para proveedorId (columna H) si hay proveedores
         if (!proveedores.isEmpty()) {
             String proveedorFormula = "Proveedores!$A$1:$A$" + proveedores.size();
             DataValidationConstraint proveedorConstraint = validationHelper.createFormulaListConstraint(proveedorFormula);
-            CellRangeAddressList proveedorAddressList = new CellRangeAddressList(1, 1000, 6, 6);
+            CellRangeAddressList proveedorAddressList = new CellRangeAddressList(1, 1000, 7, 7);
             DataValidation proveedorValidation = validationHelper.createValidation(proveedorConstraint, proveedorAddressList);
             proveedorValidation.setShowErrorBox(true);
             proveedorValidation.setEmptyCellAllowed(true);
             sheet.addValidationData(proveedorValidation);
         }
 
-        // Crear validación para estado (columna F)
+        // Crear validación para estado (columna G)
         DataValidationConstraint estadoConstraint = validationHelper.createExplicitListConstraint(
                 new String[]{"Activo", "Inactivo"});
-        CellRangeAddressList estadoAddressList = new CellRangeAddressList(1, 1000, 5, 5);
+        CellRangeAddressList estadoAddressList = new CellRangeAddressList(1, 1000, 6, 6);
         DataValidation estadoValidation = validationHelper.createValidation(estadoConstraint, estadoAddressList);
         estadoValidation.setShowErrorBox(true);
         sheet.addValidationData(estadoValidation);
@@ -418,5 +476,44 @@ public byte[] generarPlantillaExcel(Long empresaId) throws Exception {
         workbook.write(baos);
         return baos.toByteArray();
     }
+}
+
+private void validarCodigoBarraUnico(String codigoBarra, Long idProductoActual) {
+    if (codigoBarra == null || codigoBarra.isBlank()) return;
+    String valor = codigoBarra.trim();
+    productoRepository.findByCodigoBarra(valor)
+            .filter(p -> idProductoActual == null || !p.getIdproducto().equals(idProductoActual))
+            .ifPresent(p -> {
+                throw new IllegalArgumentException("El código de barras ya está en uso");
+            });
+}
+
+private String asegurarCodigoBarra(Producto producto) {
+    if (producto.getCodigoBarra() == null || producto.getCodigoBarra().isBlank()) {
+        producto.setCodigoBarra(generarCodigoBarraUnico());
+        productoRepository.save(producto);
+    }
+    return producto.getCodigoBarra();
+}
+
+private String generarCodigoBarraUnico() {
+    for (int i = 0; i < 20; i++) {
+        String codigo = generarCodigoBarraCode128(12);
+        if (!productoRepository.existsByCodigoBarra(codigo)) {
+            return codigo;
+        }
+    }
+    throw new IllegalStateException("No se pudo generar un código de barras único");
+}
+
+private String generarCodigoBarraCode128(int longitud) {
+    final String alfabeto = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    java.util.concurrent.ThreadLocalRandom random = java.util.concurrent.ThreadLocalRandom.current();
+    StringBuilder sb = new StringBuilder(longitud);
+    for (int i = 0; i < longitud; i++) {
+        int idx = random.nextInt(alfabeto.length());
+        sb.append(alfabeto.charAt(idx));
+    }
+    return sb.toString();
 }
 }

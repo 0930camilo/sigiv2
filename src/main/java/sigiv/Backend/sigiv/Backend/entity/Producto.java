@@ -2,6 +2,7 @@ package sigiv.Backend.sigiv.Backend.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -28,6 +29,9 @@ public class Producto {
     private BigDecimal precioCompra;
     private BigDecimal precio;
     private LocalDateTime fecha;
+
+    @Column(name = "codigo_barra", unique = true, length = 64)
+    private String codigoBarra;
 
     @Enumerated(EnumType.STRING)
 private Estado estado;

@@ -1,6 +1,7 @@
 package sigiv.Backend.sigiv.Backend.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +24,10 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
     List<Producto> findByProveedor_Empresa_IdEmpresa(Long idEmpresa);
 
     List<Producto> findByNombreContainingIgnoreCase(String nombre);
+
+    Optional<Producto> findByCodigoBarra(String codigoBarra);
+
+    boolean existsByCodigoBarra(String codigoBarra);
 
     @Query("""
     SELECT p FROM Producto p

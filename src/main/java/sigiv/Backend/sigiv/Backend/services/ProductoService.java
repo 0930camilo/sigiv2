@@ -17,6 +17,9 @@ import sigiv.Backend.sigiv.Backend.entity.Producto;
 public interface ProductoService {
     ProductoResponseDto crearProducto(ProductoRequestDto     dto);
     ProductoResponseDto obtenerPorId(Long id);
+    ProductoResponseDto obtenerPorCodigoBarra(String codigoBarra);
+    String obtenerCodigoBarraBase64PorId(Long id);
+    String obtenerCodigoBarraBase64PorCodigo(String codigoBarra);
     ProductoResponseDto actualizarProducto(Long id, ProductoRequestDto dto);
     void eliminarProducto(Long id);
 

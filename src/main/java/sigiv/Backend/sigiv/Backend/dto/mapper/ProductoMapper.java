@@ -18,6 +18,7 @@ public class ProductoMapper {
             p.getPrecioCompra(),
             p.getPrecio(),
             p.getFecha(),
+            p.getCodigoBarra(),
             p.getEstado(),
         // proveedor
         p.getProveedor() != null ? p.getProveedor().getIdproveedor() : null,
@@ -45,6 +46,7 @@ public class ProductoMapper {
         if (dto.getPrecioCompra() != null) entity.setPrecioCompra(dto.getPrecioCompra());
         if (dto.getPrecio() != null) entity.setPrecio(dto.getPrecio());
         if (dto.getFecha() != null) entity.setFecha(dto.getFecha());
+        if (dto.getCodigoBarra() != null) entity.setCodigoBarra(dto.getCodigoBarra());
         if (dto.getEstado() != null) entity.setEstado(dto.getEstado());
         if (proveedor != null) entity.setProveedor(proveedor);
         if (categoria != null) entity.setCategoria(categoria);

@@ -22,6 +22,7 @@ public class ProductoRequestDto {
     private BigDecimal precioCompra;
     private BigDecimal precio;
     private LocalDateTime fecha;
+    private String codigoBarra;
     private Producto.Estado estado;
     private Long proveedorId;
     private Long categoriaId;
