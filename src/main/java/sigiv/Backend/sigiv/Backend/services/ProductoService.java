@@ -2,8 +2,6 @@ package sigiv.Backend.sigiv.Backend.services;
 
 
 
-
-
 import java.io.InputStream;
 
 import org.springframework.data.domain.Page;
@@ -32,7 +30,8 @@ Page<ProductoResponseDto> productosPorEmpresa(
         Producto.Estado estado,
         String nombre,
         String categoria,
-        String proveedor
+        String proveedor,
+        String codigoBarra
 );
 
     ProductoImportResultDto importarDesdeExcel(InputStream inputStream);

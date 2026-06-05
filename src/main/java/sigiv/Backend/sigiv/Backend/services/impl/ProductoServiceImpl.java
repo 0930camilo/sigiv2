@@ -162,7 +162,8 @@ public Page<ProductoResponseDto> productosPorEmpresa(
         Producto.Estado estado,
         String nombre,
         String categoria,
-        String proveedor
+        String proveedor,
+        String codigoBarra
 ) {
 
     Pageable pageable = PageRequest.of(page, size, Sort.by("idproducto").descending());
@@ -174,6 +175,7 @@ public Page<ProductoResponseDto> productosPorEmpresa(
                     nombre,
                     categoria,
                     proveedor,
+                    codigoBarra,
                     pageable
             );
 

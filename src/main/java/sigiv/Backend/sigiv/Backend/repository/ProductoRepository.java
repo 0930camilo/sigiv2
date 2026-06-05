@@ -43,6 +43,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
     AND (:nombre IS NULL OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :nombre, '%')))
     AND (:categoria IS NULL OR LOWER(c.nombre) LIKE LOWER(CONCAT('%', :categoria, '%')))
     AND (:proveedor IS NULL OR LOWER(pr.nombre) LIKE LOWER(CONCAT('%', :proveedor, '%')))
+    AND (:codigoBarra IS NULL OR p.codigoBarra = :codigoBarra)
     """)
     Page<Producto> buscarProductosConFiltros(
             @Param("idEmpresa") Long idEmpresa,
@@ -50,6 +51,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
             @Param("nombre") String nombre,
             @Param("categoria") String categoria,
             @Param("proveedor") String proveedor,
+            @Param("codigoBarra") String codigoBarra,
             Pageable pageable
     );
 }

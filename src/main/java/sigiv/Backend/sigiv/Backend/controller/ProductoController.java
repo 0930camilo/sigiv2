@@ -113,11 +113,12 @@ public ResponseEntity<ApiResponse<Object>> listarProductosEmpresa(
         @RequestParam(required = false) Producto.Estado estado,
         @RequestParam(required = false) String nombre,
         @RequestParam(required = false) String categoria,
-        @RequestParam(required = false) String proveedor
+        @RequestParam(required = false) String proveedor,
+        @RequestParam(required = false) String codigoBarra
         ) {
 
     Page<ProductoResponseDto> productosPage =
-            productoService.productosPorEmpresa(idEmpresa, page, size, estado, nombre, categoria, proveedor);
+            productoService.productosPorEmpresa(idEmpresa, page, size, estado, nombre, categoria, proveedor, codigoBarra);
 
     var data = new java.util.HashMap<String, Object>();
     data.put("totalPages", productosPage.getTotalPages());
