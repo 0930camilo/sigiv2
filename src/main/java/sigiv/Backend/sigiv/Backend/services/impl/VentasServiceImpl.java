@@ -133,6 +133,8 @@ public class VentasServiceImpl implements VentasService {
         // Actualizar datos básicos del cliente o efectivo
         venta.setNombreCliente(dto.getNombreCliente());
         venta.setTelefonoCliente(dto.getTelefonoCliente());
+        venta.setCorreoCliente(dto.getCorreoCliente());
+        venta.setDocumentoCliente(dto.getDocumentoCliente());
         venta.setEfectivo(dto.getEfectivo());
 
         // Eliminar detalles antiguos y reponer stock
@@ -247,6 +249,12 @@ public byte[] generarFacturaPdf(Long id) {
         document.add(new Paragraph("Fecha: " + venta.getFecha()));
         document.add(new Paragraph("Cliente: " + venta.getNombreCliente()));
         document.add(new Paragraph("Teléfono Cliente: " + venta.getTelefonoCliente()));
+        if (venta.getCorreoCliente() != null && !venta.getCorreoCliente().isBlank()) {
+            document.add(new Paragraph("Correo Cliente: " + venta.getCorreoCliente()));
+        }
+        if (venta.getDocumentoCliente() != null && !venta.getDocumentoCliente().isBlank()) {
+            document.add(new Paragraph("Documento Cliente: " + venta.getDocumentoCliente()));
+        }
         document.add(new Paragraph("Vendedor: " + venta.getUsuario().getNombres()));
         document.add(new Paragraph(" "));
 

@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import sigiv.Backend.sigiv.Backend.dto.ventas.VentasRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.ventas.VentasResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.ventas.ResumenVendedorDto;
+import sigiv.Backend.sigiv.Backend.dto.ventas.EnviarFacturaCorreoRequestDto;
+import sigiv.Backend.sigiv.Backend.services.FacturaEmailService;
 import sigiv.Backend.sigiv.Backend.services.VentasService;
 import sigiv.Backend.sigiv.Backend.util.ApiResponse;
 
@@ -23,6 +25,9 @@ public class VentasController {
 
     @Autowired
     private VentasService ventasService;
+
+    @Autowired
+    private FacturaEmailService facturaEmailService;
 
     @PostMapping("/crear-venta")
     public VentasResponseDto crearVenta(@RequestBody VentasRequestDto dto) {
@@ -104,6 +109,23 @@ public ResponseEntity<byte[]> descargarFactura(@PathVariable Long id) {
             .header("Content-Type", "application/pdf")
             .body(pdf);
 }
+
+    @PostMapping("/{id}/factura/enviar-correo")
+    public ResponseEntity<ApiResponse<Void>> enviarFacturaPorCorreo(
+            @PathVariable Long id,
+            @RequestBody EnviarFacturaCorreoRequestDto dto
+    ) {
+        facturaEmailService.enviarFacturaPorCorreo(id, dto.getCorreoDestino());
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        HttpStatus.OK.value(),
+                        "Factura enviada correctamente por correo",
+                        null
+                )
+        );
+    }
 
     @GetMapping("/empresa/{empresaId}/resumen-vendedores")
     public ResponseEntity<ApiResponse<List<ResumenVendedorDto>>> resumenVendedores(

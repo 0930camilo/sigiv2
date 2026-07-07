@@ -12,11 +12,14 @@ import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
 import sigiv.Backend.sigiv.Backend.dto.catego.CategoriaResponseDto;
+import sigiv.Backend.sigiv.Backend.dto.correo.CorreoEmpresaRequestDto;
+import sigiv.Backend.sigiv.Backend.dto.correo.CorreoEmpresaResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.empre.EmpresaRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.empre.EmpresaResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.user.UsuarioResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Empresa;
+import sigiv.Backend.sigiv.Backend.services.CorreoEmpresaService;
 import sigiv.Backend.sigiv.Backend.services.EmpresaService;
 
 import sigiv.Backend.sigiv.Backend.util.ApiResponse;
@@ -27,6 +30,7 @@ import sigiv.Backend.sigiv.Backend.util.ApiResponse;
 public class EmpresaController<empresaService> {
 
     private final EmpresaService empresaService;
+    private final CorreoEmpresaService correoEmpresaService;
 
     @PostMapping("/crear-empresa")
     public ResponseEntity<ApiResponse<EmpresaResponseDto>> crear(@RequestBody EmpresaRequestDto dto) {
@@ -216,6 +220,28 @@ public ResponseEntity<ApiResponse<Long>> contarUsuariosActivos(@PathVariable Lon
     return ResponseEntity.ok(
             new ApiResponse<>(true, HttpStatus.OK.value(),
                     "Número de usuarios activos en la empresa con id " + id, totalActivos)
+    );
+}
+
+@PutMapping("/{id}/correo-facturacion")
+public ResponseEntity<ApiResponse<CorreoEmpresaResponseDto>> guardarCorreoFacturacion(
+        @PathVariable Long id,
+        @RequestBody CorreoEmpresaRequestDto dto) {
+    CorreoEmpresaResponseDto configuracion = correoEmpresaService.guardarConfiguracion(id, dto);
+
+    return ResponseEntity.ok(
+            new ApiResponse<>(true, HttpStatus.OK.value(),
+                    "Correo de facturación configurado correctamente", configuracion)
+    );
+}
+
+@GetMapping("/{id}/correo-facturacion")
+public ResponseEntity<ApiResponse<CorreoEmpresaResponseDto>> obtenerCorreoFacturacion(@PathVariable Long id) {
+    CorreoEmpresaResponseDto configuracion = correoEmpresaService.obtenerConfiguracion(id);
+
+    return ResponseEntity.ok(
+            new ApiResponse<>(true, HttpStatus.OK.value(),
+                    "Configuración de correo de facturación obtenida correctamente", configuracion)
     );
 }
 
