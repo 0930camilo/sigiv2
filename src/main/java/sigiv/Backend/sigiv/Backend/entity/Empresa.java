@@ -35,6 +35,8 @@ public class Empresa {
     private String nit;
     private long telefono;
     private String direccion;
+    // Nuevo: correo de la empresa
+    private String correo;
 
     @Enumerated(EnumType.STRING)
     private Estado estado;

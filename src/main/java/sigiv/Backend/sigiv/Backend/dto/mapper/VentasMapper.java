@@ -23,6 +23,8 @@ public class VentasMapper {
         venta.setUsuario(usuario);
         venta.setNombreCliente(dto.getNombreCliente());
         venta.setTelefonoCliente(dto.getTelefonoCliente());
+        venta.setCorreoCliente(dto.getCorreoCliente());
+        venta.setDocumentoCliente(dto.getDocumentoCliente());
         venta.setEfectivo(dto.getEfectivo());
         return venta;
     }
@@ -39,6 +41,8 @@ public class VentasMapper {
                 entity.getFecha(),
                 entity.getNombreCliente(),
                 entity.getTelefonoCliente(),
+                entity.getCorreoCliente(),
+                entity.getDocumentoCliente(),
                 entity.getTotal(),
                 entity.getEfectivo(),
                 entity.getCambio(),

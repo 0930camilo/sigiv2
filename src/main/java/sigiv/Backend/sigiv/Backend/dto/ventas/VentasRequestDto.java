@@ -18,6 +18,8 @@ public class VentasRequestDto {
     private Long usuarioId;
     private String nombreCliente;
     private String telefonoCliente;
+    private String correoCliente;
+    private String documentoCliente;
     private BigDecimal efectivo;
     private List<DetalleVentaRequestDto> detalles;
 }

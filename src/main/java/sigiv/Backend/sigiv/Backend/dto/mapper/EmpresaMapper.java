@@ -13,6 +13,7 @@ public class EmpresaMapper {
             e.getNombreEmpresa(),
             e.getClave(),
             e.getNit(),
+            e.getCorreo(),
             e.getTelefono(),
             e.getDireccion(),
               e.getEstado()
@@ -29,6 +30,7 @@ public class EmpresaMapper {
         if (dto.getNombre_empresa() != null) entity.setNombreEmpresa(dto.getNombre_empresa());
         // La clave NO se actualiza aquí, se maneja en el servicio con encriptación
         if (dto.getNit() != null) entity.setNit(dto.getNit());
+        if (dto.getCorreo() != null) entity.setCorreo(dto.getCorreo());
         entity.setTelefono(dto.getTelefono());
         if (dto.getDireccion() != null) entity.setDireccion(dto.getDireccion());
       if (dto.getEstado() != null) entity.setEstado(dto.getEstado());

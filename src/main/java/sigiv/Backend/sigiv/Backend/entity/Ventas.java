@@ -23,6 +23,8 @@ public class Ventas {
     private BigDecimal total;
     private String nombreCliente;
     private String telefonoCliente;
+    private String correoCliente;
+    private String documentoCliente;
     private BigDecimal efectivo;
     private BigDecimal cambio;
 

@@ -20,6 +20,8 @@ public class VentasResponseDto {
     private LocalDateTime fecha;
     private String nombreCliente;
     private String telefonoCliente;
+    private String correoCliente;
+    private String documentoCliente;
     private BigDecimal total;
     private BigDecimal efectivo;
     private BigDecimal cambio;

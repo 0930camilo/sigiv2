@@ -16,6 +16,7 @@ public class EmpresaResponseDto {
     private String nombre_empresa;
     private String clave;
     private String nit;
+    private String correo;
     private long telefono;
     private String direccion;
     private Empresa.Estado estado;
