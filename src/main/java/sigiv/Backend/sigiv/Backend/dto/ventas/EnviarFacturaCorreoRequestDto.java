@@ -12,4 +12,5 @@ import lombok.Setter;
 public class EnviarFacturaCorreoRequestDto {
 
     private String correoDestino;
+    private String formatoFactura;
 }

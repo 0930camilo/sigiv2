@@ -115,7 +115,7 @@ public ResponseEntity<byte[]> descargarFactura(@PathVariable Long id) {
             @PathVariable Long id,
             @RequestBody EnviarFacturaCorreoRequestDto dto
     ) {
-        facturaEmailService.enviarFacturaPorCorreo(id, dto.getCorreoDestino());
+        facturaEmailService.enviarFacturaPorCorreo(id, dto.getCorreoDestino(), dto.getFormatoFactura());
 
         return ResponseEntity.ok(
                 new ApiResponse<>(

@@ -48,16 +48,19 @@ private final ProductoRepository productoRepository;
     private final PasswordEncoder passwordEncoder;
 
 
-    
+
     @Override
     public EmpresaResponseDto crearEmpresa(EmpresaRequestDto dto) {
         Empresa empresa = EmpresaMapper.toEntityForCreate(dto, new Empresa());
         empresa.setClave(passwordEncoder.encode(dto.getClave()));
-        empresa.setEstado(Empresa.Estado.Activo);
+
+        if (empresa.getEstado() == null) {
+            empresa.setEstado(Empresa.Estado.Activo);
+        }
+
         Empresa guardado = empresaRepository.save(empresa);
         return EmpresaMapper.toDto(guardado);
     }
-
     @Override
     public EmpresaResponseDto obtenerPorId(Long id) {
         Empresa empresa = empresaRepository.findById(id)

@@ -14,8 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.lowagie.text.Document;
+import com.lowagie.text.Element;
 import com.lowagie.text.Font;
 import com.lowagie.text.Paragraph;
+import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 
@@ -291,6 +293,109 @@ public byte[] generarFacturaPdf(Long id) {
     } catch (Exception e) {
         throw new RuntimeException("Error generando factura PDF", e);
     }
+}
+
+
+@Override
+public byte[] generarFacturaPosPdf(Long id) {
+    try {
+        Ventas venta = ventasRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Venta no encontrada"));
+
+        Empresa empresa = venta.getUsuario().getEmpresa();
+        NumberFormat formatoNumero = NumberFormat.getInstance(new Locale("es", "CO"));
+        formatoNumero.setMinimumFractionDigits(0);
+        formatoNumero.setMaximumFractionDigits(0);
+
+        int cantidadDetalles = venta.getDetalles() != null ? venta.getDetalles().size() : 0;
+        float altoPagina = Math.max(420f, 300f + (cantidadDetalles * 46f));
+        Rectangle pageSize = new Rectangle(226.77f, altoPagina); // 80 mm de ancho
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Document document = new Document(pageSize, 8f, 8f, 8f, 8f);
+        PdfWriter.getInstance(document, out);
+
+        document.open();
+
+        Font tituloFont = new Font(Font.COURIER, 10, Font.BOLD);
+        Font normalFont = new Font(Font.COURIER, 8, Font.NORMAL);
+        Font boldFont = new Font(Font.COURIER, 8, Font.BOLD);
+
+        addCentered(document, safeText(empresa.getNombreEmpresa(), "SIGIV"), tituloFont);
+        addCentered(document, "FACTURA POS", boldFont);
+        addCentered(document, "No. " + venta.getIdventa(), normalFont);
+        addLine(document, "--------------------------------", normalFont);
+        addLine(document, "Fecha: " + safeText(venta.getFecha(), "-"), normalFont);
+        addLine(document, "Cliente: " + safeText(venta.getNombreCliente(), "Consumidor final"), normalFont);
+        addLine(document, "Telefono: " + safeText(venta.getTelefonoCliente(), "-"), normalFont);
+
+        if (venta.getDocumentoCliente() != null && !venta.getDocumentoCliente().isBlank()) {
+            addLine(document, "Documento: " + venta.getDocumentoCliente(), normalFont);
+        }
+
+        addLine(document, "Vendedor: " + safeText(venta.getUsuario().getNombres(), "-"), normalFont);
+        addLine(document, "--------------------------------", normalFont);
+
+        for (DetalleVentas detalle : venta.getDetalles()) {
+            String nombreProducto = detalle.getProducto() != null
+                    ? detalle.getProducto().getNombre()
+                    : "Producto";
+            BigDecimal precioProducto = detalle.getProducto() != null
+                    ? detalle.getProducto().getPrecio()
+                    : BigDecimal.ZERO;
+            String precio = "$" + formatoNumero.format(precioProducto);
+            String subtotal = "$" + formatoNumero.format(detalle.getSubtotal());
+
+            addLine(document, limitar(nombreProducto, 32), boldFont);
+            addLine(
+                    document,
+                    detalle.getCantidad() + " x " + precio + " = " + subtotal,
+                    normalFont
+            );
+        }
+
+        addLine(document, "--------------------------------", normalFont);
+        addLine(document, "TOTAL:   $" + formatoNumero.format(venta.getTotal()), boldFont);
+        addLine(document, "Efectivo: $" + formatoNumero.format(venta.getEfectivo()), normalFont);
+        addLine(document, "Cambio:  $" + formatoNumero.format(venta.getCambio()), normalFont);
+        addLine(document, "--------------------------------", normalFont);
+        addCentered(document, "Gracias por su compra", normalFont);
+
+        document.close();
+
+        return out.toByteArray();
+    } catch (Exception e) {
+        throw new RuntimeException("Error generando factura POS PDF", e);
+    }
+}
+
+private void addCentered(Document document, String text, Font font) throws Exception {
+    Paragraph paragraph = new Paragraph(text, font);
+    paragraph.setAlignment(Element.ALIGN_CENTER);
+    paragraph.setLeading(10f);
+    document.add(paragraph);
+}
+
+private void addLine(Document document, String text, Font font) throws Exception {
+    Paragraph paragraph = new Paragraph(text, font);
+    paragraph.setLeading(10f);
+    document.add(paragraph);
+}
+
+private String safeText(Object value, String fallback) {
+    if (value == null || String.valueOf(value).isBlank()) {
+        return fallback;
+    }
+
+    return String.valueOf(value);
+}
+
+private String limitar(String value, int maxLength) {
+    if (value == null) {
+        return "";
+    }
+
+    return value.length() <= maxLength ? value : value.substring(0, maxLength);
 }
 
 

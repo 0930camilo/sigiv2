@@ -30,6 +30,8 @@ public interface VentasService {
        // ✅ AGREGA ESTO
     byte[] generarFacturaPdf(Long id);
 
+    byte[] generarFacturaPosPdf(Long id);
+
 
     Page<VentasResponseDto> buscarVentaPorIdYEmpresa(
         Long empresaId,

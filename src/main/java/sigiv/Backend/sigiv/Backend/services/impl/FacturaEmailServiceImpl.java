@@ -28,6 +28,11 @@ public class FacturaEmailServiceImpl implements FacturaEmailService {
 
     @Override
     public void enviarFacturaPorCorreo(Long ventaId, String correoDestino) {
+        enviarFacturaPorCorreo(ventaId, correoDestino, null);
+    }
+
+    @Override
+    public void enviarFacturaPorCorreo(Long ventaId, String correoDestino, String formatoFactura) {
         if (correoDestino == null || correoDestino.isBlank()) {
             throw new IllegalArgumentException("El correo destino es obligatorio");
         }
@@ -53,8 +58,11 @@ public class FacturaEmailServiceImpl implements FacturaEmailService {
             throw new IllegalArgumentException("La clave de aplicación de la empresa es obligatoria");
         }
 
-        byte[] pdf = ventasService.generarFacturaPdf(ventaId);
-        enviarCorreo(venta, empresa, configuracionCorreo, correoDestino.trim(), pdf);
+        boolean formatoPos = "POS".equalsIgnoreCase(formatoFactura);
+        byte[] pdf = formatoPos
+                ? ventasService.generarFacturaPosPdf(ventaId)
+                : ventasService.generarFacturaPdf(ventaId);
+        enviarCorreo(venta, empresa, configuracionCorreo, correoDestino.trim(), pdf, formatoPos);
     }
 
     private void enviarCorreo(
@@ -62,7 +70,8 @@ public class FacturaEmailServiceImpl implements FacturaEmailService {
             Empresa empresa,
             CorreoEmpresa configuracionCorreo,
             String correoDestino,
-            byte[] pdf
+            byte[] pdf,
+            boolean formatoPos
     ) {
         try {
             JavaMailSenderImpl mailSender = crearMailSender(empresa, configuracionCorreo);
@@ -78,16 +87,18 @@ public class FacturaEmailServiceImpl implements FacturaEmailService {
 
             helper.setFrom(empresa.getCorreo(), nombreEmpresa);
             helper.setTo(correoDestino);
-            helper.setSubject("Factura de venta #" + venta.getIdventa());
+            helper.setSubject((formatoPos ? "Factura POS #" : "Factura de venta #") + venta.getIdventa());
             helper.setText(
                     "Hola " + nombreCliente + ",\n\n"
-                            + "Adjuntamos la factura de tu compra realizada en " + nombreEmpresa + ".\n\n"
+                            + "Adjuntamos la factura "
+                            + (formatoPos ? "POS " : "")
+                            + "de tu compra realizada en " + nombreEmpresa + ".\n\n"
                             + "Gracias por tu compra.",
                     false
             );
 
             helper.addAttachment(
-                    "factura-" + venta.getIdventa() + ".pdf",
+                    (formatoPos ? "factura-pos-" : "factura-") + venta.getIdventa() + ".pdf",
                     () -> new java.io.ByteArrayInputStream(pdf)
             );
 
