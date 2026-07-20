@@ -17,6 +17,9 @@ import sigiv.Backend.sigiv.Backend.repository.CorreoEmpresaRepository;
 import sigiv.Backend.sigiv.Backend.repository.VentasRepository;
 import sigiv.Backend.sigiv.Backend.services.FacturaEmailService;
 import sigiv.Backend.sigiv.Backend.services.VentasService;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+
 
 @Service
 @RequiredArgsConstructor
@@ -143,4 +146,28 @@ public class FacturaEmailServiceImpl implements FacturaEmailService {
         return mailSender;
     }
 
+
+    @Override
+    public void probarConexionSmtp() {
+
+        System.out.println("========== PRUEBA SMTP ==========");
+
+        try (Socket socket = new Socket()) {
+
+            System.out.println("Intentando conectar a smtp.gmail.com:587 ...");
+
+            socket.connect(new InetSocketAddress("smtp.gmail.com", 587), 10000);
+
+            System.out.println("✅ Conexión TCP exitosa con Gmail.");
+
+        } catch (Exception e) {
+
+            System.out.println("❌ Error conectando con Gmail:");
+            e.printStackTrace();
+
+            throw new RuntimeException(e);
+        }
+
+        System.out.println("=================================");
+    }
 }
