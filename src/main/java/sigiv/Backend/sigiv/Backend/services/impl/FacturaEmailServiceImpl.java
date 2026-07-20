@@ -136,9 +136,22 @@ public class FacturaEmailServiceImpl implements FacturaEmailService {
         mailSender.setPassword(configuracionCorreo.getClaveAplicacion());
 
         Properties props = mailSender.getJavaMailProperties();
+
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", String.valueOf(Boolean.TRUE.equals(configuracionCorreo.getStartTls())));
+
+        if (configuracionCorreo.getSmtpPort() == 465) {
+
+            props.put("mail.smtp.ssl.enable", "true");
+            props.put("mail.smtp.starttls.enable", "false");
+
+        } else {
+
+            props.put("mail.smtp.starttls.enable",
+                    String.valueOf(Boolean.TRUE.equals(configuracionCorreo.getStartTls())));
+
+        }
+
         props.put("mail.smtp.connectiontimeout", "60000");
         props.put("mail.smtp.timeout", "60000");
         props.put("mail.smtp.writetimeout", "60000");
@@ -156,7 +169,7 @@ public class FacturaEmailServiceImpl implements FacturaEmailService {
 
             System.out.println("Intentando conectar a smtp.gmail.com:587 ...");
 
-            socket.connect(new InetSocketAddress("smtp.gmail.com", 587), 10000);
+            socket.connect(new InetSocketAddress("smtp.gmail.com", 465), 10000);
 
             System.out.println("✅ Conexión TCP exitosa con Gmail.");
 
