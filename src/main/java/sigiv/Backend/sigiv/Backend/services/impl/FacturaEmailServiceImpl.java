@@ -74,10 +74,23 @@ public class FacturaEmailServiceImpl implements FacturaEmailService {
             boolean formatoPos
     ) {
         try {
+
+            System.out.println("========== CONFIG SMTP ==========");
+            System.out.println("Host: " + configuracionCorreo.getSmtpHost());
+            System.out.println("Puerto: " + configuracionCorreo.getSmtpPort());
+            System.out.println("TLS: " + configuracionCorreo.getStartTls());
+            System.out.println("Correo: " + empresa.getCorreo());
+            System.out.println("Password vacía: " +
+                    (configuracionCorreo.getClaveAplicacion() == null
+                            || configuracionCorreo.getClaveAplicacion().isBlank()));
+            System.out.println("=================================");
+
             JavaMailSenderImpl mailSender = crearMailSender(empresa, configuracionCorreo);
+
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+            // resto de tu código...
             String nombreEmpresa = empresa.getNombreEmpresa() != null && !empresa.getNombreEmpresa().isBlank()
                     ? empresa.getNombreEmpresa()
                     : "SIGIV";
@@ -123,10 +136,11 @@ public class FacturaEmailServiceImpl implements FacturaEmailService {
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", String.valueOf(Boolean.TRUE.equals(configuracionCorreo.getStartTls())));
-        props.put("mail.smtp.connectiontimeout", "10000");
-        props.put("mail.smtp.timeout", "10000");
-        props.put("mail.smtp.writetimeout", "10000");
+        props.put("mail.smtp.connectiontimeout", "60000");
+        props.put("mail.smtp.timeout", "60000");
+        props.put("mail.smtp.writetimeout", "60000");
 
         return mailSender;
     }
+
 }
