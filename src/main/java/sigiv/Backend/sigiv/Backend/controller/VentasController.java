@@ -181,5 +181,11 @@ public ResponseEntity<byte[]> descargarFactura(@PathVariable Long id) {
         );
     }
 
+    @GetMapping("/test-smtp")
+    public ResponseEntity<String> probarSmtp() {
 
+        facturaEmailService.probarConexionSmtp();
+
+        return ResponseEntity.ok("Conexión SMTP correcta");
+    }
 }
