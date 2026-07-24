@@ -133,10 +133,22 @@ public class CotizacionServiceImpl implements CotizacionService {
             Long usuarioId,
             String nombreCliente,
             String fechaInicio,
-            String fechaFin
+            String fechaFin,
+            Long idCotizacion
     ) {
         // Paginación con ordenamiento por fecha descendente (más recientes primero)
-        Pageable pageable = PageRequest.of(page, size, Sort.by("fecha").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("idcotizacion").descending());
+
+        // Si se proporciona idCotizacion, priorizamos la búsqueda por ID
+        if (idCotizacion != null) {
+            if (usuarioId != null) {
+                return cotizacionRepository.findByIdAndEmpresaIdAndUsuarioId(idCotizacion, empresaId, usuarioId, pageable)
+                        .map(cotizacionMapper::toDto);
+            } else {
+                return cotizacionRepository.findByIdAndEmpresaId(idCotizacion, empresaId, pageable)
+                        .map(cotizacionMapper::toDto);
+            }
+        }
 
         // Convertir fechas de DD/MM/YYYY a LocalDateTime
         LocalDateTime dtFechaInicio = null;

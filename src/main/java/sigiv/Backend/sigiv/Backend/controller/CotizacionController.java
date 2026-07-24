@@ -63,7 +63,8 @@ public class CotizacionController {
             @RequestParam(required = false) Long usuarioId,
             @RequestParam(required = false) String nombreCliente,
             @RequestParam(required = false) String fechaInicio,
-            @RequestParam(required = false) String fechaFin
+            @RequestParam(required = false) String fechaFin,
+            @RequestParam(required = false) Long idCotizacion
     ) {
         Page<CotizacionResponseDto> cotizacionesPage =
                 cotizacionService.listarCotizacionesPorEmpresa(
@@ -73,7 +74,8 @@ public class CotizacionController {
                         usuarioId,
                         nombreCliente,
                         fechaInicio,
-                        fechaFin
+                        fechaFin,
+                        idCotizacion
                 );
 
         Map<String, Object> data = new HashMap<>();
@@ -91,7 +93,6 @@ public class CotizacionController {
                 )
         );
     }
-
     @GetMapping("/{id}/descargar")
     public ResponseEntity<byte[]> descargarCotizacion(@PathVariable Long id) {
         byte[] pdf = cotizacionService.generarCotizacionPdf(id);

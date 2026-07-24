@@ -23,7 +23,8 @@ public interface CotizacionService {
             Long usuarioId,
             String nombreCliente,
             String fechaInicio,
-            String fechaFin
+            String fechaFin,
+            Long idCotizacion
     );
     
     // Método para generar cotización en PDF
