@@ -14,7 +14,6 @@ public interface EmpresaRepository extends JpaRepository<Empresa, Long>{
   List<Empresa> findByEstado(Empresa.Estado estado);
   Optional<Empresa> findByNombreEmpresa(String nombreEmpresa);
 
-
-   
+  boolean existsByIdEmpresa(Long idEmpresa);
 }
 

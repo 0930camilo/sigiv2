@@ -35,7 +35,7 @@ BigDecimal totalVendidoPorUsuarioEntreFechas(
 @Query("""
     SELECT COALESCE(SUM(v.total), 0)
     FROM Ventas v
-    WHERE v.usuario.empresa.idEmpresa = :idEmpresa
+    WHERE (v.usuario.empresa.idEmpresa = :idEmpresa OR v.empresa.idEmpresa = :idEmpresa)
 """)
 BigDecimal totalVendidoPorEmpresa(@Param("idEmpresa") Long idEmpresa);
 
@@ -43,7 +43,7 @@ BigDecimal totalVendidoPorEmpresa(@Param("idEmpresa") Long idEmpresa);
 @Query("""
     SELECT COALESCE(SUM(v.total), 0)
     FROM Ventas v
-    WHERE v.usuario.empresa.idEmpresa = :idEmpresa
+    WHERE (v.usuario.empresa.idEmpresa = :idEmpresa OR v.empresa.idEmpresa = :idEmpresa)
     AND v.fecha BETWEEN :fechaInicio AND :fechaFin
 """)
 BigDecimal totalVendidoPorEmpresaEntreFechas(
@@ -90,7 +90,7 @@ BigDecimal totalVendidoPorEmpresaEntreFechas(
         FROM Ventas v
         JOIN v.detalles dv
         JOIN dv.producto p
-        WHERE v.usuario.empresa.idEmpresa = :idEmpresa
+        WHERE (v.usuario.empresa.idEmpresa = :idEmpresa OR v.empresa.idEmpresa = :idEmpresa)
     """)
     BigDecimal gananciaPorEmpresa(@Param("idEmpresa") Long idEmpresa);
 
@@ -101,7 +101,7 @@ BigDecimal totalVendidoPorEmpresaEntreFechas(
         FROM Ventas v
         JOIN v.detalles dv
         JOIN dv.producto p
-        WHERE v.usuario.empresa.idEmpresa = :idEmpresa
+        WHERE (v.usuario.empresa.idEmpresa = :idEmpresa OR v.empresa.idEmpresa = :idEmpresa)
         AND v.fecha BETWEEN :fechaInicio AND :fechaFin
     """)
     BigDecimal gananciaPorEmpresaEntreFechas(
@@ -115,17 +115,24 @@ BigDecimal totalVendidoPorEmpresaEntreFechas(
   @Query("""
     SELECT v
     FROM Ventas v
-    JOIN v.usuario u
-    WHERE u.empresa.idEmpresa = :empresaId
+    LEFT JOIN v.usuario u
+    WHERE (u.empresa.idEmpresa = :empresaId OR v.empresa.idEmpresa = :empresaId)
 """)
 Page<Ventas> findVentasByEmpresa(
         @Param("empresaId") Long empresaId,
         Pageable pageable
 );
 
-Page<Ventas> findByIdventaAndUsuarioEmpresaIdEmpresa(
-        Long idventa,
-        Long empresaId,
+@Query("""
+    SELECT v
+    FROM Ventas v
+    LEFT JOIN v.usuario u
+    WHERE v.idventa = :idventa
+    AND (u.empresa.idEmpresa = :empresaId OR v.empresa.idEmpresa = :empresaId)
+""")
+Page<Ventas> findByIdventaAndEmpresaOUsuarioEmpresa(
+        @Param("idventa") Long idventa,
+        @Param("empresaId") Long empresaId,
         Pageable pageable
 );
 

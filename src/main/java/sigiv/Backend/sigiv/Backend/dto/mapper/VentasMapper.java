@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import sigiv.Backend.sigiv.Backend.dto.detalleVenta.DetalleVentaResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.ventas.VentasResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.ventas.VentasRequestDto;
+import sigiv.Backend.sigiv.Backend.entity.Empresa;
 import sigiv.Backend.sigiv.Backend.entity.Usuario;
 import sigiv.Backend.sigiv.Backend.entity.Ventas;
 
@@ -18,9 +19,10 @@ public class VentasMapper {
     @Autowired
     private DetalleVentaMapper detalleMapper;
 
-    public Ventas toEntity(VentasRequestDto dto, Usuario usuario) {
+    public Ventas toEntity(VentasRequestDto dto, Usuario usuario, Empresa empresa) {
         Ventas venta = new Ventas();
         venta.setUsuario(usuario);
+        venta.setEmpresa(empresa);
         venta.setNombreCliente(dto.getNombreCliente());
         venta.setTelefonoCliente(dto.getTelefonoCliente());
         venta.setCorreoCliente(dto.getCorreoCliente());

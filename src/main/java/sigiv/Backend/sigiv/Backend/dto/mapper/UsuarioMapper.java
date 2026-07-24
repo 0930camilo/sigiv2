@@ -21,6 +21,7 @@ public class UsuarioMapper {
 
     public static Usuario toEntityForCreate(UsuarioRequestDto dto, Empresa empresa) {
         Usuario u = new Usuario();
+        if (dto.getIdUsuario() != null) u.setIdUsuario(dto.getIdUsuario());
         updateEntityFromDto(dto, u, empresa);
         return u;
     }
