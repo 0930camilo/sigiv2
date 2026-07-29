@@ -28,13 +28,25 @@ public class PersonaServiceImpl implements PersonaService {
 
     @Override
     public PersonaResponseDto crearPersona(PersonaRequestDto dto) {
+
+        if (dto.getEmpresaId() != null &&
+                personaRepository.existsByEmpresaIdEmpresaAndDocumento(
+                        dto.getEmpresaId(),
+                        dto.getDocumento())) {
+
+            throw new IllegalArgumentException(
+                    "Ya existe una persona con ese documento en esta empresa.");
+        }
+
         Empresa empresa = null;
         if (dto.getEmpresaId() != null) {
             empresa = empresaRepository.findById(dto.getEmpresaId())
-                    .orElseThrow(() -> new IllegalArgumentException("empresa no encontrada"));
+                    .orElseThrow(() -> new IllegalArgumentException("Empresa no encontrada"));
         }
+
         Persona persona = PersonaMapper.toEntityForCreate(dto, empresa);
         Persona guardada = personaRepository.save(persona);
+
         return PersonaMapper.toDto(guardada);
     }
 
@@ -45,10 +57,26 @@ public class PersonaServiceImpl implements PersonaService {
         return PersonaMapper.toDto(persona);
     }
 
+
+
     @Override
     public PersonaResponseDto actualizarPersona(Long id, PersonaRequestDto dto) {
+
         Persona persona = personaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Persona", "id", id));
+        Long empresaId = dto.getEmpresaId() != null
+                ? dto.getEmpresaId()
+                : persona.getEmpresa().getIdEmpresa();
+
+        if (dto.getDocumento() != null &&
+                personaRepository.existsByEmpresaIdEmpresaAndDocumentoAndIdpersonaNot(
+                        empresaId,
+                        dto.getDocumento(),
+                        id)) {
+
+            throw new IllegalArgumentException(
+                    "Ya existe otra persona con ese documento en esta empresa.");
+        }
 
         Empresa empresa = null;
         if (dto.getEmpresaId() != null) {
@@ -57,7 +85,9 @@ public class PersonaServiceImpl implements PersonaService {
         }
 
         PersonaMapper.updateEntityFromDto(dto, persona, empresa);
+
         Persona actualizado = personaRepository.save(persona);
+
         return PersonaMapper.toDto(actualizado);
     }
 
@@ -97,6 +127,12 @@ public class PersonaServiceImpl implements PersonaService {
     @Override
     public Page<PersonaResponseDto> filtrarPorEmpresa(Long empresaId, Persona.Estado estado, String documento, String nombre, int page, int size) {
         return personaRepository.filtrarPorEmpresa(empresaId, estado, documento, nombre, PageRequest.of(page, size, Sort.by("idpersona").descending()))
+                .map(PersonaMapper::toDto);
+    }
+
+    @Override
+    public Page<PersonaResponseDto> filtrarPorEmpresaExacto(Long empresaId, Persona.Estado estado, String documento, String nombre, int page, int size) {
+        return personaRepository.filtrarPorEmpresaExacto(empresaId, estado, documento, nombre, PageRequest.of(page, size, Sort.by("idpersona").descending()))
                 .map(PersonaMapper::toDto);
     }
 
