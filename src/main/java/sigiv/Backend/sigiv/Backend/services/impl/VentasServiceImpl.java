@@ -209,19 +209,29 @@ public class VentasServiceImpl implements VentasService {
     }
 
  @Override
-public Page<VentasResponseDto> listarVentasPorEmpresaPaginado(
-        Long empresaId,
-        int page,
-        int size
-) {
+    public Page<VentasResponseDto> listarVentasPorEmpresaPaginado(
+            Long empresaId,
+            int page,
+            int size,
+            String fechaInicio,
+            String fechaFin,
+            String cliente
+    ) {
+        LocalDateTime inicio = (fechaInicio != null && !fechaInicio.isBlank()) 
+                ? LocalDate.parse(fechaInicio).atStartOfDay() : null;
+        LocalDateTime fin = (fechaFin != null && !fechaFin.isBlank()) 
+                ? LocalDate.parse(fechaFin).atTime(LocalTime.MAX) : null;
 
-    Page<Ventas> ventasPage = ventasRepository.findVentasByEmpresa(
-            empresaId,
-            PageRequest.of(page, size, Sort.by("idventa").descending())
-    );
+        Page<Ventas> ventasPage = ventasRepository.findVentasByEmpresa(
+                empresaId,
+                inicio,
+                fin,
+                cliente,
+                PageRequest.of(page, size, Sort.by("idventa").descending())
+        );
 
-    return ventasPage.map(ventasMapper::toDto);
-}
+        return ventasPage.map(ventasMapper::toDto);
+    }
 
 
 @Override
@@ -462,19 +472,30 @@ public List<ResumenVendedorDto> resumenVentasPorUsuario(
     return resumen;
 }
 
-@Override
-public Page<VentasResponseDto> listarVentasPorUsuarioPaginado(
-        Long usuarioId,
-        int page,
-        int size
-) {
-    Page<Ventas> ventasPage = ventasRepository.findVentasByUsuario(
-            usuarioId,
-            PageRequest.of(page, size, Sort.by("idventa").descending())
-    );
+ @Override
+    public Page<VentasResponseDto> listarVentasPorUsuarioPaginado(
+            Long usuarioId,
+            int page,
+            int size,
+            String fechaInicio,
+            String fechaFin,
+            String cliente
+    ) {
+        LocalDateTime inicio = (fechaInicio != null && !fechaInicio.isBlank()) 
+                ? LocalDate.parse(fechaInicio).atStartOfDay() : null;
+        LocalDateTime fin = (fechaFin != null && !fechaFin.isBlank()) 
+                ? LocalDate.parse(fechaFin).atTime(LocalTime.MAX) : null;
 
-    return ventasPage.map(ventasMapper::toDto);
-}
+        Page<Ventas> ventasPage = ventasRepository.findVentasByUsuario(
+                usuarioId,
+                inicio,
+                fin,
+                cliente,
+                PageRequest.of(page, size, Sort.by("idventa").descending())
+        );
+
+        return ventasPage.map(ventasMapper::toDto);
+    }
 
 @Override
 public Page<VentasResponseDto> buscarVentaPorIdYUsuario(

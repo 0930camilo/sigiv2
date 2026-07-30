@@ -57,30 +57,36 @@ public class VentasController {
         ventasService.eliminarVenta(id);
     }
 
- @GetMapping("/empresa/{empresaId}/ventas")
-public ResponseEntity<ApiResponse<Map<String, Object>>> listarVentasPorEmpresa(
-        @PathVariable Long empresaId,
-        @RequestParam(required = false) Long idVenta,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
-) {
+    @GetMapping("/empresa/{empresaId}/ventas")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> listarVentasPorEmpresa(
+            @PathVariable Long empresaId,
+            @RequestParam(required = false) Long idVenta,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String fechaInicio,
+            @RequestParam(required = false) String fechaFin,
+            @RequestParam(required = false) String cliente
+    ) {
 
-    Page<VentasResponseDto> ventasPage;
+        Page<VentasResponseDto> ventasPage;
 
-    if (idVenta != null) {
-        ventasPage = ventasService.buscarVentaPorIdYEmpresa(
-                empresaId,
-                idVenta,
-                page,
-                size
-        );
-    } else {
-        ventasPage = ventasService.listarVentasPorEmpresaPaginado(
-                empresaId,
-                page,
-                size
-        );
-    }
+        if (idVenta != null) {
+            ventasPage = ventasService.buscarVentaPorIdYEmpresa(
+                    empresaId,
+                    idVenta,
+                    page,
+                    size
+            );
+        } else {
+            ventasPage = ventasService.listarVentasPorEmpresaPaginado(
+                    empresaId,
+                    page,
+                    size,
+                    fechaInicio,
+                    fechaFin,
+                    cliente
+            );
+        }
 
     Map<String, Object> data = new HashMap<>();
     data.put("ventas", ventasPage.getContent());
@@ -145,7 +151,10 @@ public ResponseEntity<byte[]> descargarFactura(@PathVariable Long id) {
             @PathVariable Long usuarioId,
             @RequestParam(required = false) Long idVenta,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String fechaInicio,
+            @RequestParam(required = false) String fechaFin,
+            @RequestParam(required = false) String cliente
     ) {
 
         Page<VentasResponseDto> ventasPage;
@@ -161,7 +170,10 @@ public ResponseEntity<byte[]> descargarFactura(@PathVariable Long id) {
             ventasPage = ventasService.listarVentasPorUsuarioPaginado(
                     usuarioId,
                     page,
-                    size
+                    size,
+                    fechaInicio,
+                    fechaFin,
+                    cliente
             );
         }
 
