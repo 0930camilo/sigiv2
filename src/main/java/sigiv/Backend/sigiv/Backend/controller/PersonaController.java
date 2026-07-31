@@ -98,11 +98,16 @@ public class PersonaController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Persona.Estado estado,
             @RequestParam(required = false) String documento,
-            @RequestParam(required = false) String nombre) {
+            @RequestParam(required = false) String nombre,
+            @RequestParam(defaultValue = "false") boolean exacto) {
 
         Page<PersonaResponseDto> personasPage;
         if (estado != null || documento != null || nombre != null) {
-            personasPage = personaService.filtrarPorEmpresa(empresaId, estado, documento, nombre, page, size);
+            if (exacto && documento != null) {
+                personasPage = personaService.filtrarPorEmpresaExacto(empresaId, estado, documento, nombre, page, size);
+            } else {
+                personasPage = personaService.filtrarPorEmpresa(empresaId, estado, documento, nombre, page, size);
+            }
         } else {
             personasPage = personaService.listarPorEmpresaPaginado(empresaId, page, size);
         }

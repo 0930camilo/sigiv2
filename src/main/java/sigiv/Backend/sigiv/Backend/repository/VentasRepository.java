@@ -112,39 +112,51 @@ BigDecimal totalVendidoPorEmpresaEntreFechas(
 
 
 
-  @Query("""
-    SELECT v
-    FROM Ventas v
-    LEFT JOIN v.usuario u
-    WHERE (u.empresa.idEmpresa = :empresaId OR v.empresa.idEmpresa = :empresaId)
-""")
-Page<Ventas> findVentasByEmpresa(
-        @Param("empresaId") Long empresaId,
-        Pageable pageable
-);
+    @Query("""
+        SELECT v
+        FROM Ventas v
+        LEFT JOIN v.usuario u
+        WHERE (u.empresa.idEmpresa = :empresaId OR v.empresa.idEmpresa = :empresaId)
+        AND (:fechaInicio IS NULL OR v.fecha >= :fechaInicio)
+        AND (:fechaFin IS NULL OR v.fecha <= :fechaFin)
+        AND (:cliente IS NULL OR v.nombreCliente LIKE CONCAT('%', :cliente, '%') OR v.documentoCliente LIKE CONCAT('%', :cliente, '%'))
+    """)
+    Page<Ventas> findVentasByEmpresa(
+            @Param("empresaId") Long empresaId,
+            @Param("fechaInicio") java.time.LocalDateTime fechaInicio,
+            @Param("fechaFin") java.time.LocalDateTime fechaFin,
+            @Param("cliente") String cliente,
+            Pageable pageable
+    );
 
-@Query("""
-    SELECT v
-    FROM Ventas v
-    LEFT JOIN v.usuario u
-    WHERE v.idventa = :idventa
-    AND (u.empresa.idEmpresa = :empresaId OR v.empresa.idEmpresa = :empresaId)
-""")
-Page<Ventas> findByIdventaAndEmpresaOUsuarioEmpresa(
-        @Param("idventa") Long idventa,
-        @Param("empresaId") Long empresaId,
-        Pageable pageable
-);
+    @Query("""
+        SELECT v
+        FROM Ventas v
+        LEFT JOIN v.usuario u
+        WHERE v.idventa = :idventa
+        AND (u.empresa.idEmpresa = :empresaId OR v.empresa.idEmpresa = :empresaId)
+    """)
+    Page<Ventas> findByIdventaAndEmpresaOUsuarioEmpresa(
+            @Param("idventa") Long idventa,
+            @Param("empresaId") Long empresaId,
+            Pageable pageable
+    );
 
-@Query("""
-    SELECT v
-    FROM Ventas v
-    WHERE v.usuario.idUsuario = :usuarioId
-""")
-Page<Ventas> findVentasByUsuario(
-        @Param("usuarioId") Long usuarioId,
-        Pageable pageable
-);
+    @Query("""
+        SELECT v
+        FROM Ventas v
+        WHERE v.usuario.idUsuario = :usuarioId
+        AND (:fechaInicio IS NULL OR v.fecha >= :fechaInicio)
+        AND (:fechaFin IS NULL OR v.fecha <= :fechaFin)
+        AND (:cliente IS NULL OR v.nombreCliente LIKE CONCAT('%', :cliente, '%') OR v.documentoCliente LIKE CONCAT('%', :cliente, '%'))
+    """)
+    Page<Ventas> findVentasByUsuario(
+            @Param("usuarioId") Long usuarioId,
+            @Param("fechaInicio") java.time.LocalDateTime fechaInicio,
+            @Param("fechaFin") java.time.LocalDateTime fechaFin,
+            @Param("cliente") String cliente,
+            Pageable pageable
+    );
 
 Page<Ventas> findByIdventaAndUsuarioIdUsuario(
         Long idventa,
