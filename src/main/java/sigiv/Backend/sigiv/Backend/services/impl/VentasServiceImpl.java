@@ -33,6 +33,7 @@ import sigiv.Backend.sigiv.Backend.entity.Producto;
 import sigiv.Backend.sigiv.Backend.entity.Usuario;
 import sigiv.Backend.sigiv.Backend.entity.Ventas;
 import sigiv.Backend.sigiv.Backend.repository.DetalleVentaRepository;
+import sigiv.Backend.sigiv.Backend.repository.EmpresaRepository;
 import sigiv.Backend.sigiv.Backend.repository.ProductoRepository;
 import sigiv.Backend.sigiv.Backend.repository.UsuarioRepository;
 import sigiv.Backend.sigiv.Backend.repository.VentasRepository;
@@ -57,6 +58,9 @@ public class VentasServiceImpl implements VentasService {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
+    private EmpresaRepository empresaRepository;
+
+    @Autowired
     private ProductoRepository productoRepository;
 
     @Autowired
@@ -72,10 +76,25 @@ public class VentasServiceImpl implements VentasService {
     @Transactional
     public VentasResponseDto crearVenta(VentasRequestDto dto) {
 
-        Usuario usuario = usuarioRepository.findById(dto.getUsuarioId())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        Usuario usuario = null;
+        if (dto.getUsuarioId() != null) {
+            usuario = usuarioRepository.findById(dto.getUsuarioId())
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        }
 
-        Ventas venta = ventasMapper.toEntity(dto, usuario);
+        Empresa empresa = null;
+        if (dto.getEmpresaId() != null) {
+            empresa = empresaRepository.findById(dto.getEmpresaId())
+                    .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
+        } else if (usuario != null) {
+            empresa = usuario.getEmpresa();
+        }
+
+        if (empresa == null) {
+            throw new RuntimeException("Debe proporcionar un id de empresa o un usuario asociado a una empresa.");
+        }
+
+        Ventas venta = ventasMapper.toEntity(dto, usuario, empresa);
         venta.setFecha(LocalDateTime.now());
         venta.setTotal(BigDecimal.ZERO);
         ventasRepository.save(venta);
@@ -190,19 +209,29 @@ public class VentasServiceImpl implements VentasService {
     }
 
  @Override
-public Page<VentasResponseDto> listarVentasPorEmpresaPaginado(
-        Long empresaId,
-        int page,
-        int size
-) {
+    public Page<VentasResponseDto> listarVentasPorEmpresaPaginado(
+            Long empresaId,
+            int page,
+            int size,
+            String fechaInicio,
+            String fechaFin,
+            String cliente
+    ) {
+        LocalDateTime inicio = (fechaInicio != null && !fechaInicio.isBlank()) 
+                ? LocalDate.parse(fechaInicio).atStartOfDay() : null;
+        LocalDateTime fin = (fechaFin != null && !fechaFin.isBlank()) 
+                ? LocalDate.parse(fechaFin).atTime(LocalTime.MAX) : null;
 
-    Page<Ventas> ventasPage = ventasRepository.findVentasByEmpresa(
-            empresaId,
-            PageRequest.of(page, size, Sort.by("idventa").descending())
-    );
+        Page<Ventas> ventasPage = ventasRepository.findVentasByEmpresa(
+                empresaId,
+                inicio,
+                fin,
+                cliente,
+                PageRequest.of(page, size, Sort.by("idventa").descending())
+        );
 
-    return ventasPage.map(ventasMapper::toDto);
-}
+        return ventasPage.map(ventasMapper::toDto);
+    }
 
 
 @Override
@@ -411,7 +440,7 @@ public Page<VentasResponseDto> buscarVentaPorIdYEmpresa(
     Pageable pageable = PageRequest.of(page, size, Sort.by("idventa").descending());
 
     Page<Ventas> ventasPage =
-            ventasRepository.findByIdventaAndUsuarioEmpresaIdEmpresa(
+            ventasRepository.findByIdventaAndEmpresaOUsuarioEmpresa(
                     idVenta,
                     empresaId,
                     pageable
@@ -443,19 +472,30 @@ public List<ResumenVendedorDto> resumenVentasPorUsuario(
     return resumen;
 }
 
-@Override
-public Page<VentasResponseDto> listarVentasPorUsuarioPaginado(
-        Long usuarioId,
-        int page,
-        int size
-) {
-    Page<Ventas> ventasPage = ventasRepository.findVentasByUsuario(
-            usuarioId,
-            PageRequest.of(page, size, Sort.by("idventa").descending())
-    );
+ @Override
+    public Page<VentasResponseDto> listarVentasPorUsuarioPaginado(
+            Long usuarioId,
+            int page,
+            int size,
+            String fechaInicio,
+            String fechaFin,
+            String cliente
+    ) {
+        LocalDateTime inicio = (fechaInicio != null && !fechaInicio.isBlank()) 
+                ? LocalDate.parse(fechaInicio).atStartOfDay() : null;
+        LocalDateTime fin = (fechaFin != null && !fechaFin.isBlank()) 
+                ? LocalDate.parse(fechaFin).atTime(LocalTime.MAX) : null;
 
-    return ventasPage.map(ventasMapper::toDto);
-}
+        Page<Ventas> ventasPage = ventasRepository.findVentasByUsuario(
+                usuarioId,
+                inicio,
+                fin,
+                cliente,
+                PageRequest.of(page, size, Sort.by("idventa").descending())
+        );
+
+        return ventasPage.map(ventasMapper::toDto);
+    }
 
 @Override
 public Page<VentasResponseDto> buscarVentaPorIdYUsuario(

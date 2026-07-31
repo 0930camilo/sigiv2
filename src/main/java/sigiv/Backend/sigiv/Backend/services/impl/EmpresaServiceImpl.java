@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import sigiv.Backend.sigiv.Backend.dto.mapper.CategoriaMapper;
@@ -25,9 +26,11 @@ import sigiv.Backend.sigiv.Backend.dto.empre.EmpresaRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.empre.EmpresaResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Empresa;
 import sigiv.Backend.sigiv.Backend.entity.Producto;
+import sigiv.Backend.sigiv.Backend.entity.Usuario;
 import sigiv.Backend.sigiv.Backend.exception.ResourceNotFoundException;
 import sigiv.Backend.sigiv.Backend.repository.EmpresaRepository;
 import sigiv.Backend.sigiv.Backend.repository.ProductoRepository;
+import sigiv.Backend.sigiv.Backend.repository.UsuarioRepository;
 import sigiv.Backend.sigiv.Backend.repository.VentasRepository;
 import sigiv.Backend.sigiv.Backend.services.EmpresaService;
 import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto;
@@ -37,29 +40,54 @@ import sigiv.Backend.sigiv.Backend.dto.provee.ProveedorResponseDto;
 @RequiredArgsConstructor
 public class EmpresaServiceImpl implements EmpresaService {
 
-private final EmpresaRepository empresaRepository;
+    private final EmpresaRepository empresaRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Autowired
-private final ProductoRepository productoRepository;
-
-
+    private final ProductoRepository productoRepository;
 
     private final VentasRepository ventasRepository;
     private final PasswordEncoder passwordEncoder;
 
-
-
     @Override
+    @Transactional
     public EmpresaResponseDto crearEmpresa(EmpresaRequestDto dto) {
+        // 1. Buscar un ID que esté libre tanto para Empresa como para Usuario
+        Long idLibre = encontrarProximoIdLibre();
+
+        // 2. Crear y guardar la Empresa con ese ID
         Empresa empresa = EmpresaMapper.toEntityForCreate(dto, new Empresa());
+        empresa.setIdEmpresa(idLibre);
         empresa.setClave(passwordEncoder.encode(dto.getClave()));
 
         if (empresa.getEstado() == null) {
             empresa.setEstado(Empresa.Estado.Activo);
         }
 
-        Empresa guardado = empresaRepository.save(empresa);
-        return EmpresaMapper.toDto(guardado);
+        Empresa guardada = empresaRepository.save(empresa);
+
+        // 3. Crear automáticamente el Usuario Administrador con el mismo ID
+        Usuario admin = new Usuario();
+        admin.setIdUsuario(idLibre);
+        admin.setDocumento(dto.getNit()); // Usamos el NIT como documento inicial
+        admin.setNombres("Admin " + dto.getNombre_empresa());
+        admin.setClave(guardada.getClave()); // Misma clave que la empresa inicialmente
+        admin.setTelefono(dto.getTelefono());
+        admin.setDireccion(dto.getDireccion());
+        admin.setEstado(Usuario.Estado.Activo);
+        admin.setEmpresa(guardada);
+
+        usuarioRepository.save(admin);
+
+        return EmpresaMapper.toDto(guardada);
+    }
+
+    private Long encontrarProximoIdLibre() {
+        long id = 1;
+        while (empresaRepository.existsByIdEmpresa(id) || usuarioRepository.existsByIdUsuario(id)) {
+            id++;
+        }
+        return id;
     }
     @Override
     public EmpresaResponseDto obtenerPorId(Long id) {

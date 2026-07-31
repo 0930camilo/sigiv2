@@ -17,6 +17,9 @@ import sigiv.Backend.sigiv.Backend.repository.CorreoEmpresaRepository;
 import sigiv.Backend.sigiv.Backend.repository.VentasRepository;
 import sigiv.Backend.sigiv.Backend.services.FacturaEmailService;
 import sigiv.Backend.sigiv.Backend.services.VentasService;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+
 
 @Service
 @RequiredArgsConstructor
@@ -74,10 +77,23 @@ public class FacturaEmailServiceImpl implements FacturaEmailService {
             boolean formatoPos
     ) {
         try {
+
+            System.out.println("========== CONFIG SMTP ==========");
+            System.out.println("Host: " + configuracionCorreo.getSmtpHost());
+            System.out.println("Puerto: " + configuracionCorreo.getSmtpPort());
+            System.out.println("TLS: " + configuracionCorreo.getStartTls());
+            System.out.println("Correo: " + empresa.getCorreo());
+            System.out.println("Password vacía: " +
+                    (configuracionCorreo.getClaveAplicacion() == null
+                            || configuracionCorreo.getClaveAplicacion().isBlank()));
+            System.out.println("=================================");
+
             JavaMailSenderImpl mailSender = crearMailSender(empresa, configuracionCorreo);
+
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+            // resto de tu código...
             String nombreEmpresa = empresa.getNombreEmpresa() != null && !empresa.getNombreEmpresa().isBlank()
                     ? empresa.getNombreEmpresa()
                     : "SIGIV";
@@ -120,13 +136,51 @@ public class FacturaEmailServiceImpl implements FacturaEmailService {
         mailSender.setPassword(configuracionCorreo.getClaveAplicacion());
 
         Properties props = mailSender.getJavaMailProperties();
+
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", String.valueOf(Boolean.TRUE.equals(configuracionCorreo.getStartTls())));
-        props.put("mail.smtp.connectiontimeout", "10000");
-        props.put("mail.smtp.timeout", "10000");
-        props.put("mail.smtp.writetimeout", "10000");
+
+        if (configuracionCorreo.getSmtpPort() == 465) {
+
+            props.put("mail.smtp.ssl.enable", "true");
+            props.put("mail.smtp.starttls.enable", "false");
+
+        } else {
+
+            props.put("mail.smtp.starttls.enable",
+                    String.valueOf(Boolean.TRUE.equals(configuracionCorreo.getStartTls())));
+
+        }
+
+        props.put("mail.smtp.connectiontimeout", "60000");
+        props.put("mail.smtp.timeout", "60000");
+        props.put("mail.smtp.writetimeout", "60000");
 
         return mailSender;
+    }
+
+
+    @Override
+    public void probarConexionSmtp() {
+
+        System.out.println("========== PRUEBA SMTP ==========");
+
+        try (Socket socket = new Socket()) {
+
+            System.out.println("Intentando conectar a smtp.gmail.com:587 ...");
+
+            socket.connect(new InetSocketAddress("smtp.gmail.com", 465), 10000);
+
+            System.out.println("✅ Conexión TCP exitosa con Gmail.");
+
+        } catch (Exception e) {
+
+            System.out.println("❌ Error conectando con Gmail:");
+            e.printStackTrace();
+
+            throw new RuntimeException(e);
+        }
+
+        System.out.println("=================================");
     }
 }

@@ -24,7 +24,10 @@ public interface VentasService {
     Page<VentasResponseDto> listarVentasPorEmpresaPaginado(
             Long empresaId,
             int page,
-            int size
+            int size,
+            String fechaInicio,
+            String fechaFin,
+            String cliente
     );
 
        // ✅ AGREGA ESTO
@@ -49,7 +52,10 @@ public interface VentasService {
     Page<VentasResponseDto> listarVentasPorUsuarioPaginado(
             Long usuarioId,
             int page,
-            int size
+            int size,
+            String fechaInicio,
+            String fechaFin,
+            String cliente
     );
 
     Page<VentasResponseDto> buscarVentaPorIdYUsuario(

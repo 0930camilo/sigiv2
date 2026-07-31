@@ -41,9 +41,23 @@ public class UsuarioServiceImpl implements UsuarioService {
                     .orElseThrow(() -> new IllegalArgumentException("Empresa no encontrada"));
         }
         Usuario usuario = UsuarioMapper.toEntityForCreate(dto, empresa);
+
+        // Si no se proporcionó ID, buscamos el siguiente disponible para evitar conflictos con Empresa
+        if (usuario.getIdUsuario() == null) {
+            usuario.setIdUsuario(encontrarProximoIdUsuarioLibre());
+        }
+
         usuario.setClave(passwordEncoder.encode(dto.getClave()));
         Usuario guardado = usuarioRepository.save(usuario);
         return UsuarioMapper.toDto(guardado);
+    }
+
+    private Long encontrarProximoIdUsuarioLibre() {
+        long id = 1;
+        while (empresaRepository.existsByIdEmpresa(id) || usuarioRepository.existsByIdUsuario(id)) {
+            id++;
+        }
+        return id;
     }
 
 

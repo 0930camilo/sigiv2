@@ -33,6 +33,11 @@ public class Ventas {
     @JsonBackReference("usuario-ventas")
     private Usuario usuario;
 
+    @ManyToOne
+    @JoinColumn(name = "empresa_idempresa")
+    @JsonBackReference("empresa-ventas")
+    private Empresa empresa;
+
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<DetalleVentas> detalles;

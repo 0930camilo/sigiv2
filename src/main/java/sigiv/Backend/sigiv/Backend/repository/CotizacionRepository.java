@@ -80,4 +80,19 @@ public interface CotizacionRepository extends JpaRepository<Cotizacion, Long> {
             @Param("fechaFin") LocalDateTime fechaFin,
             Pageable pageable
     );
+
+    @Query("SELECT c FROM Cotizacion c WHERE c.idcotizacion = :idCotizacion AND c.usuario.empresa.idEmpresa = :empresaId")
+    Page<Cotizacion> findByIdAndEmpresaId(
+            @Param("idCotizacion") Long idCotizacion,
+            @Param("empresaId") Long empresaId,
+            Pageable pageable
+    );
+
+    @Query("SELECT c FROM Cotizacion c WHERE c.idcotizacion = :idCotizacion AND c.usuario.empresa.idEmpresa = :empresaId AND c.usuario.idUsuario = :usuarioId")
+    Page<Cotizacion> findByIdAndEmpresaIdAndUsuarioId(
+            @Param("idCotizacion") Long idCotizacion,
+            @Param("empresaId") Long empresaId,
+            @Param("usuarioId") Long usuarioId,
+            Pageable pageable
+    );
 }

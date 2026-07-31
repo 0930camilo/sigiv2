@@ -67,4 +67,6 @@ Page<Usuario> findByEmpresa_IdEmpresaAndEstadoAndNombresContainingIgnoreCaseAndD
 );
 
     List<Usuario> findByNombresContainingIgnoreCase(String nombres);
+
+    boolean existsByIdUsuario(Long idUsuario);
 }

@@ -14,7 +14,7 @@ import sigiv.Backend.sigiv.Backend.dto.detalleVenta.DetalleVentaRequestDto;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VentasRequestDto {
-
+    private Long empresaId;
     private Long usuarioId;
     private String nombreCliente;
     private String telefonoCliente;
