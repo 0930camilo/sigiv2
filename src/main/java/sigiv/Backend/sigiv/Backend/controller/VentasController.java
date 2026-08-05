@@ -116,6 +116,15 @@ public ResponseEntity<byte[]> descargarFactura(@PathVariable Long id) {
             .body(pdf);
 }
 
+    @GetMapping("/{id}/factura-pos")
+    public ResponseEntity<byte[]> descargarFacturaPos(@PathVariable Long id) {
+        byte[] pdf = ventasService.generarFacturaPosPdf(id);
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=factura-pos-" + id + ".pdf")
+                .header("Content-Type", "application/pdf")
+                .body(pdf);
+    }
+
     @PostMapping("/{id}/factura/enviar-correo")
     public ResponseEntity<ApiResponse<Void>> enviarFacturaPorCorreo(
             @PathVariable Long id,
