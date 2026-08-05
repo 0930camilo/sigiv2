@@ -23,10 +23,20 @@ public class VentasMapper {
         Ventas venta = new Ventas();
         venta.setUsuario(usuario);
         venta.setEmpresa(empresa);
-        venta.setNombreCliente(dto.getNombreCliente());
+        
+        // Asignar nombre con valor por defecto si está vacío
+        String nombre = (dto.getNombreCliente() == null || dto.getNombreCliente().isBlank()) 
+                        ? "NN" : dto.getNombreCliente();
+        venta.setNombreCliente(nombre);
+        
         venta.setTelefonoCliente(dto.getTelefonoCliente());
         venta.setCorreoCliente(dto.getCorreoCliente());
-        venta.setDocumentoCliente(dto.getDocumentoCliente());
+        
+        // Asignar documento con valor por defecto si está vacío
+        String documento = (dto.getDocumentoCliente() == null || dto.getDocumentoCliente().isBlank()) 
+                           ? "999999999" : dto.getDocumentoCliente();
+        venta.setDocumentoCliente(documento);
+        
         venta.setEfectivo(dto.getEfectivo());
         return venta;
     }

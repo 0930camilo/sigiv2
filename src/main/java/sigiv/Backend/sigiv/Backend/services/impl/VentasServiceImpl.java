@@ -152,10 +152,17 @@ public class VentasServiceImpl implements VentasService {
                 .orElseThrow(() -> new RuntimeException("Venta no encontrada con ID: " + id));
 
         // Actualizar datos básicos del cliente o efectivo
-        venta.setNombreCliente(dto.getNombreCliente());
+        String nombre = (dto.getNombreCliente() == null || dto.getNombreCliente().isBlank()) 
+                        ? "NN" : dto.getNombreCliente();
+        venta.setNombreCliente(nombre);
+        
         venta.setTelefonoCliente(dto.getTelefonoCliente());
         venta.setCorreoCliente(dto.getCorreoCliente());
-        venta.setDocumentoCliente(dto.getDocumentoCliente());
+        
+        String documento = (dto.getDocumentoCliente() == null || dto.getDocumentoCliente().isBlank()) 
+                           ? "999999999" : dto.getDocumentoCliente();
+        venta.setDocumentoCliente(documento);
+        
         venta.setEfectivo(dto.getEfectivo());
 
         // Eliminar detalles antiguos y reponer stock
@@ -284,7 +291,7 @@ public byte[] generarFacturaPdf(Long id) {
             document.add(new Paragraph("Correo Cliente: " + venta.getCorreoCliente()));
         }
         if (venta.getDocumentoCliente() != null && !venta.getDocumentoCliente().isBlank()) {
-            document.add(new Paragraph("Documento Cliente: " + venta.getDocumentoCliente()));
+            document.add(new Paragraph("Documento Cliente: " + enmascararDocumento(venta.getDocumentoCliente())));
         }
         document.add(new Paragraph("Vendedor: " + venta.getUsuario().getNombres()));
         document.add(new Paragraph(" "));
@@ -359,7 +366,7 @@ public byte[] generarFacturaPosPdf(Long id) {
         addLine(document, "Telefono: " + safeText(venta.getTelefonoCliente(), "-"), normalFont);
 
         if (venta.getDocumentoCliente() != null && !venta.getDocumentoCliente().isBlank()) {
-            addLine(document, "Documento: " + venta.getDocumentoCliente(), normalFont);
+            addLine(document, "Documento: " + enmascararDocumento(venta.getDocumentoCliente()), normalFont);
         }
 
         addLine(document, "Vendedor: " + safeText(venta.getUsuario().getNombres(), "-"), normalFont);
@@ -425,6 +432,14 @@ private String limitar(String value, int maxLength) {
     }
 
     return value.length() <= maxLength ? value : value.substring(0, maxLength);
+}
+
+private String enmascararDocumento(String documento) {
+    if (documento == null || documento.length() <= 3) {
+        return documento;
+    }
+    String ultimosTres = documento.substring(documento.length() - 3);
+    return "*******" + ultimosTres;
 }
 
 
