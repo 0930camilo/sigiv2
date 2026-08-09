@@ -45,21 +45,21 @@ public class DevolucionServiceImpl implements DevolucionService {
                 .orElseThrow(() -> new RuntimeException("El producto no pertenece a esta venta."));
 
         // 3️⃣ Validar cantidad
-        if (dto.getCantidad() == null || dto.getCantidad() <= 0) {
+        if (dto.getCantidad() == null || dto.getCantidad().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("La cantidad devuelta debe ser mayor que 0");
         }
 
-        if (dto.getCantidad() > detalle.getCantidad()) {
+        if (dto.getCantidad().compareTo(detalle.getCantidad()) > 0) {
             throw new IllegalArgumentException("No puedes devolver más de lo vendido");
         }
 
         // 4️⃣ Reintegrar al inventario
-        producto.setCantidad(producto.getCantidad() + dto.getCantidad());
+        producto.setCantidad(producto.getCantidad().add(dto.getCantidad()));
         productoRepository.save(producto);
 
         // 5️⃣ Actualizar detalle de venta
-        detalle.setCantidad(detalle.getCantidad() - dto.getCantidad());
-        detalle.setSubtotal(detalle.getPrecio().multiply(BigDecimal.valueOf(detalle.getCantidad())));
+        detalle.setCantidad(detalle.getCantidad().subtract(dto.getCantidad()));
+        detalle.setSubtotal(detalle.getPrecio().multiply(detalle.getCantidad()));
         detalleVentaRepository.save(detalle);
 
         // 6️⃣ Recalcular total de la venta

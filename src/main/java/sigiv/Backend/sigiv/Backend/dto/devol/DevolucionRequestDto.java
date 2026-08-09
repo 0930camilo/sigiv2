@@ -1,5 +1,6 @@
 package sigiv.Backend.sigiv.Backend.dto.devol;
 
+import java.math.BigDecimal;
 import lombok.*;
 
 @Getter
@@ -9,6 +10,6 @@ import lombok.*;
 public class DevolucionRequestDto {
     private Long ventaId;
     private Long productoId;
-    private Integer cantidad;
+    private BigDecimal cantidad;
     private String motivo;
 }

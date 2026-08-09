@@ -105,17 +105,17 @@ public class VentasServiceImpl implements VentasService {
             Producto producto = productoRepository.findById(detalleDto.getProductoId())
                     .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
 
-            if (detalleDto.getCantidad() > producto.getCantidad()) {
+            if (detalleDto.getCantidad().compareTo(producto.getCantidad()) > 0) {
                 throw new RuntimeException("Stock insuficiente para el producto: " + producto.getNombre());
             }
 
             BigDecimal subtotal = producto.getPrecio()
-                    .multiply(BigDecimal.valueOf(detalleDto.getCantidad()));
+                    .multiply(detalleDto.getCantidad());
 
             DetalleVentas detalle = detalleVentaMapper.toEntity(detalleDto, venta, producto, subtotal);
             detalleVentaRepository.save(detalle);
 
-            producto.setCantidad(producto.getCantidad() - detalleDto.getCantidad());
+            producto.setCantidad(producto.getCantidad().subtract(detalleDto.getCantidad()));
             productoRepository.save(producto);
 
             totalVenta = totalVenta.add(subtotal);
@@ -170,7 +170,7 @@ public class VentasServiceImpl implements VentasService {
         for (DetalleVentas d : detallesAntiguos) {
             Producto producto = d.getProducto();
             if (producto != null) {
-                producto.setCantidad(producto.getCantidad() + d.getCantidad());
+                producto.setCantidad(producto.getCantidad().add(d.getCantidad()));
                 productoRepository.save(producto);
             }
         }
@@ -182,17 +182,17 @@ public class VentasServiceImpl implements VentasService {
             Producto producto = productoRepository.findById(detalleDto.getProductoId())
                     .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
 
-            if (detalleDto.getCantidad() > producto.getCantidad()) {
+            if (detalleDto.getCantidad().compareTo(producto.getCantidad()) > 0) {
                 throw new RuntimeException("Stock insuficiente para el producto: " + producto.getNombre());
             }
 
             BigDecimal subtotal = producto.getPrecio()
-                    .multiply(BigDecimal.valueOf(detalleDto.getCantidad()));
+                    .multiply(detalleDto.getCantidad());
 
             DetalleVentas nuevoDetalle = detalleVentaMapper.toEntity(detalleDto, venta, producto, subtotal);
             detalleVentaRepository.save(nuevoDetalle);
 
-            producto.setCantidad(producto.getCantidad() - detalleDto.getCantidad());
+            producto.setCantidad(producto.getCantidad().subtract(detalleDto.getCantidad()));
             productoRepository.save(producto);
 
             totalVenta = totalVenta.add(subtotal);

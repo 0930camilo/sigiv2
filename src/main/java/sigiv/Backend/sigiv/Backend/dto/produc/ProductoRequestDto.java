@@ -18,12 +18,13 @@ public class ProductoRequestDto {
      private Long idProducto;
     private String nombre;
     private String descripcion;
-    private Integer cantidad;
+    private BigDecimal cantidad;
     private BigDecimal precioCompra;
     private BigDecimal precio;
     private LocalDateTime fecha;
     private String codigoBarra;
     private Producto.Estado estado;
+    private Producto.UnidadMedida unidadMedida;
     private Long proveedorId;
     private Long categoriaId;
 }

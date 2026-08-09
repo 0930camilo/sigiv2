@@ -13,7 +13,7 @@ import lombok.Setter;
 public class DetalleVentaResponseDto {
 
     private String descripcionProducto;
-    private Integer cantidad;
+    private BigDecimal cantidad;
     private BigDecimal precio;
     private BigDecimal subtotal;
 }

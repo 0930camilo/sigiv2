@@ -1,5 +1,6 @@
 package sigiv.Backend.sigiv.Backend.dto.devol;
 
+import java.math.BigDecimal;
 import lombok.*;
 import java.time.LocalDateTime;
 
@@ -12,7 +13,7 @@ public class DevolucionResponseDto {
     private Long ventaId;
     private Long productoId;
     private String nombreProducto;
-    private Integer cantidad;
+    private BigDecimal cantidad;
     private String motivo;
     private LocalDateTime fecha;
 }

@@ -15,7 +15,7 @@ public class DetalleVentas {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long iddetalle;
 
-    private Integer cantidad;
+    private BigDecimal cantidad;
     private BigDecimal precio;
     private BigDecimal subtotal;
     private String descripcionProducto;

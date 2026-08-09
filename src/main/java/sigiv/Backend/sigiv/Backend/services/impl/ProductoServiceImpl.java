@@ -188,13 +188,14 @@ public Page<ProductoResponseDto> productosPorEmpresa(
  * Columnas esperadas (fila 1 = encabezado, datos desde fila 2):
  *   A: nombre        (texto, obligatorio)
  *   B: descripcion   (texto, opcional)
- *   C: cantidad      (entero, obligatorio)
+ *   C: cantidad      (decimal, obligatorio)
  *   D: precioCompra  (decimal, obligatorio)
  *   E: precio        (decimal, obligatorio)
  *   F: codigoBarra   (texto, opcional, único)
  *   G: estado        (Activo | Inactivo, opcional → defecto Activo)
- *   H: proveedorId   (número, opcional)
- *   I: categoriaId   (número, obligatorio)
+ *   H: unidadMedida  (KG | GRAMOS | UNIDAD | LITRO | METRO, opcional → defecto UNIDAD)
+ *   I: proveedorId   (número, opcional)
+ *   J: categoriaId   (número, obligatorio)
  */
 @Override
 public ProductoImportResultDto importarDesdeExcel(InputStream inputStream) {
@@ -218,9 +219,9 @@ public ProductoImportResultDto importarDesdeExcel(InputStream inputStream) {
 
                 String descripcion = leerTexto(row, 1);
 
-                Integer cantidad = leerEntero(row, 2);
+                BigDecimal cantidad = leerDecimal(row, 2);
                 if (cantidad == null)
-                    throw new IllegalArgumentException("El campo 'cantidad' es obligatorio y debe ser un número entero");
+                    throw new IllegalArgumentException("El campo 'cantidad' es obligatorio y debe ser un número");
 
                 BigDecimal precioCompra = leerDecimal(row, 3);
                 if (precioCompra == null)
@@ -259,13 +260,23 @@ public ProductoImportResultDto importarDesdeExcel(InputStream inputStream) {
                     }
                 }
 
+                String unidadStr = leerTexto(row, 7);
+                Producto.UnidadMedida unidadMedida = Producto.UnidadMedida.UNIDAD;
+                if (unidadStr != null && !unidadStr.isBlank()) {
+                    try {
+                        unidadMedida = Producto.UnidadMedida.valueOf(unidadStr.trim().toUpperCase());
+                    } catch (IllegalArgumentException ex) {
+                        throw new IllegalArgumentException("La 'unidadMedida' debe ser KG, GRAMOS, UNIDAD, LITRO o METRO");
+                    }
+                }
+
                 // Leer proveedorId (puede ser "ID - Nombre" o solo ID)
-                String proveedorStr = leerTexto(row, 7);
+                String proveedorStr = leerTexto(row, 8);
                 final Long proveedorIdFinal = (proveedorStr != null && !proveedorStr.isBlank())
                         ? extraerIdDeTexto(proveedorStr) : null;
 
                 // Leer categoriaId (puede ser "ID - Nombre" o solo ID)
-                String categoriaStr = leerTexto(row, 8);
+                String categoriaStr = leerTexto(row, 9);
                 if (categoriaStr == null || categoriaStr.isBlank())
                     throw new IllegalArgumentException("El campo 'categoriaId' es obligatorio");
                 final Long categoriaIdFinal = extraerIdDeTexto(categoriaStr);
@@ -282,7 +293,7 @@ public ProductoImportResultDto importarDesdeExcel(InputStream inputStream) {
                 ProductoRequestDto dto = new ProductoRequestDto(
                         null, nombre, descripcion, cantidad,
                         precioCompra, precio, LocalDateTime.now(),
-                        codigoBarra, estado, proveedorIdFinal, categoriaIdFinal
+                        codigoBarra, estado, unidadMedida, proveedorIdFinal, categoriaIdFinal
                 );
 
                 Producto producto = ProductoMapper.toEntityForCreate(dto, proveedor, categoria);
@@ -303,7 +314,7 @@ public ProductoImportResultDto importarDesdeExcel(InputStream inputStream) {
 // ───────── helpers ─────────
 
 private boolean esFilaVacia(Row row) {
-    for (int c = 0; c <= 8; c++) {
+    for (int c = 0; c <= 9; c++) {
         Cell cell = row.getCell(c);
         if (cell != null && cell.getCellType() != CellType.BLANK) return false;
     }

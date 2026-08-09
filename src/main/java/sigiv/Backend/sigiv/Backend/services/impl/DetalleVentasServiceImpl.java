@@ -38,23 +38,23 @@ public class DetalleVentasServiceImpl implements DetalleVentasService {
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + dto.getProductoId()));
 
         // 3️⃣ Validar cantidad
-        if (dto.getCantidad() == null || dto.getCantidad() <= 0) {
+        if (dto.getCantidad() == null || dto.getCantidad().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("La cantidad debe ser mayor que 0");
         }
-        if (producto.getCantidad() < dto.getCantidad()) {
+        if (producto.getCantidad().compareTo(dto.getCantidad()) < 0) {
             throw new IllegalArgumentException("Stock insuficiente para el producto: " + producto.getNombre());
         }
 
         // 4️⃣ Calcular subtotal
         BigDecimal precio = producto.getPrecio() != null ? producto.getPrecio() : BigDecimal.ZERO;
-        BigDecimal subtotal = precio.multiply(BigDecimal.valueOf(dto.getCantidad()));
+        BigDecimal subtotal = precio.multiply(dto.getCantidad());
 
         // 5️⃣ Crear y guardar detalle
         DetalleVentas detalle = detalleVentaMapper.toEntity(dto, venta, producto, subtotal);
         detalleVentaRepository.save(detalle);
 
         // 6️⃣ Descontar stock
-        producto.setCantidad(producto.getCantidad() - dto.getCantidad());
+        producto.setCantidad(producto.getCantidad().subtract(dto.getCantidad()));
         productoRepository.save(producto);
 
         // 7️⃣ Recalcular total de venta
@@ -84,7 +84,7 @@ public class DetalleVentasServiceImpl implements DetalleVentasService {
 
         // Reponer stock
         if (producto != null && detalle.getCantidad() != null) {
-            producto.setCantidad(producto.getCantidad() + detalle.getCantidad());
+            producto.setCantidad(producto.getCantidad().add(detalle.getCantidad()));
             productoRepository.save(producto);
         }
 
@@ -118,7 +118,7 @@ public void eliminarTodosLosDetallesDeVenta(Long ventaId) {
     for (DetalleVentas detalle : detalles) {
         Producto producto = detalle.getProducto();
         if (producto != null && detalle.getCantidad() != null) {
-            producto.setCantidad(producto.getCantidad() + detalle.getCantidad());
+            producto.setCantidad(producto.getCantidad().add(detalle.getCantidad()));
             productoRepository.save(producto);
         }
     }
