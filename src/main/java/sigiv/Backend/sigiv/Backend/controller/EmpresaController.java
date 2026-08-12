@@ -3,13 +3,15 @@ package sigiv.Backend.sigiv.Backend.controller;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.web.bind.annotation.*;
 
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import sigiv.Backend.sigiv.Backend.dto.catego.CategoriaResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.correo.CorreoEmpresaRequestDto;
@@ -21,8 +23,8 @@ import sigiv.Backend.sigiv.Backend.dto.user.UsuarioResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Empresa;
 import sigiv.Backend.sigiv.Backend.services.CorreoEmpresaService;
 import sigiv.Backend.sigiv.Backend.services.EmpresaService;
-
 import sigiv.Backend.sigiv.Backend.util.ApiResponse;
+import sigiv.Backend.sigiv.Backend.util.JwtUtil;
 
 @RestController
 @RequestMapping("/empresas")
@@ -31,6 +33,7 @@ public class EmpresaController<empresaService> {
 
     private final EmpresaService empresaService;
     private final CorreoEmpresaService correoEmpresaService;
+    private final JwtUtil jwtUtil; // Inyectamos JwtUtil
 
     @PostMapping("/crear-empresa")
     public ResponseEntity<ApiResponse<EmpresaResponseDto>> crear(@RequestBody EmpresaRequestDto dto) {
@@ -42,11 +45,40 @@ public class EmpresaController<empresaService> {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<EmpresaResponseDto>> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<EmpresaResponseDto>> obtenerPorId(@PathVariable Long id, HttpServletRequest request) {
+        
+        // Obtenemos el encabezado 'Authorization' de la solicitud
+        String authHeader = request.getHeader("Authorization");
+        
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                    new ApiResponse<>(false, HttpStatus.UNAUTHORIZED.value(),
+                            "Token no proporcionado o inválido", null)
+            );
+        }
+
+        // Extraemos el token (quitando "Bearer ")
+        String token = authHeader.substring(7);
+        
+        // Extraemos los claims del token usando JwtUtil
+        Claims claims = jwtUtil.extraerClaims(token);
+        
+        // Obtenemos el 'id' de los claims
+        Long authenticatedUserId = claims.get("id", Long.class);
+        
+        // Comparamos el ID del token con el ID de la URL
+        if (!authenticatedUserId.equals(id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    new ApiResponse<>(false, HttpStatus.FORBIDDEN.value(),
+                            "No tienes permiso para acceder a esta información", null)
+            );
+        }
+
+        // Si los IDs coinciden, procedemos a buscar la empresa
         EmpresaResponseDto empresa = empresaService.obtenerPorId(id);
         return ResponseEntity.ok(
                 new ApiResponse<>(true, HttpStatus.OK.value(),
-                        "Empresa encontrada", empresa   )
+                        "Empresa encontrada", empresa)
         );
     }
 
@@ -244,10 +276,4 @@ public ResponseEntity<ApiResponse<CorreoEmpresaResponseDto>> obtenerCorreoFactur
                     "Configuración de correo de facturación obtenida correctamente", configuracion)
     );
 }
-
-
-
-
-
-
 }
