@@ -11,20 +11,41 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import sigiv.Backend.sigiv.Backend.dto.user.UsuarioRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.user.UsuarioResponseDto;
 import sigiv.Backend.sigiv.Backend.entity.Usuario;
 import sigiv.Backend.sigiv.Backend.services.UsuarioService;
 import sigiv.Backend.sigiv.Backend.util.ApiResponse;
+import sigiv.Backend.sigiv.Backend.util.JwtUtil;
 
 @RestController
 @RequestMapping("/usuarios")
 @RequiredArgsConstructor
-
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+    private final JwtUtil jwtUtil;
+
+    private ResponseEntity<ApiResponse> checkPermissions(Long resourceId, HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                    new ApiResponse<>(false, HttpStatus.UNAUTHORIZED.value(), "Token no proporcionado o inválido", null)
+            );
+        }
+        String token = authHeader.substring(7);
+        Claims claims = jwtUtil.extraerClaims(token);
+        Long authenticatedUserId = claims.get("id", Long.class);
+        if (!authenticatedUserId.equals(resourceId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    new ApiResponse<>(false, HttpStatus.FORBIDDEN.value(), "No tienes permiso para acceder a esta información", null)
+            );
+        }
+        return null; // All good
+    }
 
     @PostMapping("/crear-usuarios")
     public ResponseEntity<ApiResponse<UsuarioResponseDto>> crear(@RequestBody UsuarioRequestDto dto) {
@@ -42,8 +63,6 @@ public class UsuarioController {
                         "Usuario encontrado", usuario));
     }
 
-   
-
     @GetMapping("/empresa/{empresaId}/list-users")
     public ResponseEntity<ApiResponse<Map<String, Object>>> listarPorEmpresa(
             @PathVariable Long empresaId,
@@ -51,15 +70,18 @@ public class UsuarioController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Usuario.Estado estado,
             @RequestParam(required = false) String nombres,
-            @RequestParam(required = false) String documento
+            @RequestParam(required = false) String documento,
+            HttpServletRequest request
         ) {
+
+        ResponseEntity<ApiResponse> errorResponse = checkPermissions(empresaId, request);
+        if (errorResponse != null) return (ResponseEntity) errorResponse;
 
         Page<UsuarioResponseDto> usuariosPage = usuarioService.listarUsuariosPorEmpresa(empresaId, page, size, estado, nombres, documento);
 
         Map<String, Object> data = new HashMap<>();
         data.put("usuarios", usuariosPage.getContent());
         data.put("totalElements", usuariosPage.getTotalElements());
-        
         data.put("totalPages", usuariosPage.getTotalPages());
         data.put("currentPage", usuariosPage.getNumber());
 
@@ -71,7 +93,6 @@ public class UsuarioController {
                         data));
     }
 
-   
     @PutMapping("/update-user/{id}")
     public ResponseEntity<ApiResponse<UsuarioResponseDto>> actualizar(
             @PathVariable Long id,
@@ -90,53 +111,44 @@ public class UsuarioController {
                         "Usuario eliminado correctamente", null));
     }
 
-   
-
-
-@GetMapping("/{id}/total-vendido")
-public ResponseEntity<ApiResponse<BigDecimal>> totalVendidoPorUsuario(@PathVariable Long id) {
-    BigDecimal total = usuarioService.calcularTotalVendido(id);
-    return ResponseEntity.ok(
-            new ApiResponse<>(true, HttpStatus.OK.value(),
+    @GetMapping("/{id}/total-vendido")
+    public ResponseEntity<ApiResponse<BigDecimal>> totalVendidoPorUsuario(@PathVariable Long id) {
+        BigDecimal total = usuarioService.calcularTotalVendido(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
                     "Total vendido por el usuario con id " + id, total)
-    );
-}
-
-
-@GetMapping("/{id}/total-vendido-rango")
-public ResponseEntity<ApiResponse<BigDecimal>> totalVendidoPorUsuarioEntreFechas(
-        @PathVariable Long id,
-        @RequestParam("fechaInicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
-        @RequestParam("fechaFin") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
-
-    BigDecimal total = usuarioService.calcularTotalVendidoEntreFechas(id, fechaInicio, fechaFin);
-
-    return ResponseEntity.ok(
-            new ApiResponse<>(true, HttpStatus.OK.value(),
-                    String.format("Total vendido por el usuario con id %d entre %s y %s", id, fechaInicio, fechaFin),
-                    total)
-    );
-}
-@GetMapping("/ganancia/usuario/{idUsuario}")
-public ResponseEntity<ApiResponse<BigDecimal>> obtenerGananciaPorUsuario(
-        @PathVariable Long idUsuario,
-        @RequestParam(value = "fechaInicio", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
-        @RequestParam(value = "fechaFin", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
-    BigDecimal ganancia;
-    if (fechaInicio != null && fechaFin != null) {
-        ganancia = usuarioService.calcularGananciaPorUsuarioEntreFechas(idUsuario, fechaInicio, fechaFin);
-    } else {
-        ganancia = usuarioService.calcularGananciaPorUsuario(idUsuario);
+        );
     }
-    return ResponseEntity.ok(
-        new ApiResponse<>(true, HttpStatus.OK.value(),
-                "Ganancia obtenida correctamente para el usuario con id " + idUsuario, ganancia)
-    );
-}
 
+    @GetMapping("/{id}/total-vendido-rango")
+    public ResponseEntity<ApiResponse<BigDecimal>> totalVendidoPorUsuarioEntreFechas(
+            @PathVariable Long id,
+            @RequestParam("fechaInicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam("fechaFin") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
 
+        BigDecimal total = usuarioService.calcularTotalVendidoEntreFechas(id, fechaInicio, fechaFin);
 
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(),
+                        String.format("Total vendido por el usuario con id %d entre %s y %s", id, fechaInicio, fechaFin),
+                        total)
+        );
+    }
 
-
-
+    @GetMapping("/ganancia/usuario/{idUsuario}")
+    public ResponseEntity<ApiResponse<BigDecimal>> obtenerGananciaPorUsuario(
+            @PathVariable Long idUsuario,
+            @RequestParam(value = "fechaInicio", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam(value = "fechaFin", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+        BigDecimal ganancia;
+        if (fechaInicio != null && fechaFin != null) {
+            ganancia = usuarioService.calcularGananciaPorUsuarioEntreFechas(idUsuario, fechaInicio, fechaFin);
+        } else {
+            ganancia = usuarioService.calcularGananciaPorUsuario(idUsuario);
+        }
+        return ResponseEntity.ok(
+            new ApiResponse<>(true, HttpStatus.OK.value(),
+                    "Ganancia obtenida correctamente para el usuario con id " + idUsuario, ganancia)
+        );
+    }
 }
