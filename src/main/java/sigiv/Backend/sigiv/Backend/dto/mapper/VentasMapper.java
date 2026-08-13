@@ -55,6 +55,8 @@ public class VentasMapper {
                 entity.getTelefonoCliente(),
                 entity.getCorreoCliente(),
                 entity.getDocumentoCliente(),
+                entity.getSubtotal(),
+                entity.getDescuentoTotal(),
                 entity.getTotal(),
                 entity.getEfectivo(),
                 entity.getCambio(),

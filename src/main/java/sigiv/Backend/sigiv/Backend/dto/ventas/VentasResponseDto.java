@@ -22,6 +22,8 @@ public class VentasResponseDto {
     private String telefonoCliente;
     private String correoCliente;
     private String documentoCliente;
+    private BigDecimal subtotal;
+    private BigDecimal descuentoTotal;
     private BigDecimal total;
     private BigDecimal efectivo;
     private BigDecimal cambio;

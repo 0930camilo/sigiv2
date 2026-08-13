@@ -20,6 +20,8 @@ public class Ventas {
     private Long idventa;
 
     private LocalDateTime fecha;
+    private BigDecimal subtotal;
+    private BigDecimal descuentoTotal;
     private BigDecimal total;
     private String nombreCliente;
     private String telefonoCliente;

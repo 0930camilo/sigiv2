@@ -58,14 +58,11 @@ public class DetalleVentasServiceImpl implements DetalleVentasService {
         productoRepository.save(producto);
 
         // 7️⃣ Recalcular total de venta
-        BigDecimal nuevoTotal = detalleVentaRepository.findByVentaIdventa(ventaId).stream()
+        BigDecimal nuevoSubtotal = detalleVentaRepository.findByVentaIdventa(ventaId).stream()
                 .map(d -> d.getSubtotal() != null ? d.getSubtotal() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        venta.setTotal(nuevoTotal);
-        if (venta.getEfectivo() != null) {
-            venta.setCambio(venta.getEfectivo().subtract(nuevoTotal));
-        }
+        actualizarTotalesVenta(venta, nuevoSubtotal);
         ventasRepository.save(venta);
 
         // 8️⃣ Retornar respuesta
@@ -93,14 +90,11 @@ public class DetalleVentasServiceImpl implements DetalleVentasService {
 
         // Recalcular total
         if (venta != null && venta.getIdventa() != null) {
-            BigDecimal nuevoTotal = detalleVentaRepository.findByVentaIdventa(venta.getIdventa()).stream()
+            BigDecimal nuevoSubtotal = detalleVentaRepository.findByVentaIdventa(venta.getIdventa()).stream()
                     .map(d -> d.getSubtotal() != null ? d.getSubtotal() : BigDecimal.ZERO)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            venta.setTotal(nuevoTotal);
-            if (venta.getEfectivo() != null) {
-                venta.setCambio(venta.getEfectivo().subtract(nuevoTotal));
-            }
+            actualizarTotalesVenta(venta, nuevoSubtotal);
             ventasRepository.save(venta);
         }
     }
@@ -126,12 +120,32 @@ public void eliminarTodosLosDetallesDeVenta(Long ventaId) {
     // Eliminar todos los detalles
     detalleVentaRepository.deleteAll(detalles);
 
-    // Reiniciar total y cambio de la venta
+    // Reiniciar totales y cambio de la venta
+    venta.setSubtotal(BigDecimal.ZERO);
+    venta.setDescuentoTotal(BigDecimal.ZERO);
     venta.setTotal(BigDecimal.ZERO);
     if (venta.getEfectivo() != null) {
         venta.setCambio(venta.getEfectivo()); // el cambio es igual al efectivo si ya no hay productos
     }
     ventasRepository.save(venta);
+}
+
+private void actualizarTotalesVenta(Ventas venta, BigDecimal subtotal) {
+    BigDecimal subtotalSeguro = subtotal != null ? subtotal : BigDecimal.ZERO;
+    BigDecimal descuento = venta.getDescuentoTotal() != null ? venta.getDescuentoTotal() : BigDecimal.ZERO;
+
+    if (descuento.compareTo(subtotalSeguro) > 0) {
+        descuento = subtotalSeguro;
+    }
+
+    BigDecimal total = subtotalSeguro.subtract(descuento);
+    venta.setSubtotal(subtotalSeguro);
+    venta.setDescuentoTotal(descuento);
+    venta.setTotal(total);
+
+    if (venta.getEfectivo() != null) {
+        venta.setCambio(venta.getEfectivo().subtract(total));
+    }
 }
 
 }

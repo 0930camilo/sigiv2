@@ -21,5 +21,6 @@ public class VentasRequestDto {
     private String correoCliente;
     private String documentoCliente;
     private BigDecimal efectivo;
+    private BigDecimal descuentoTotal;
     private List<DetalleVentaRequestDto> detalles;
 }

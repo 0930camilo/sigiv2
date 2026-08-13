@@ -96,10 +96,12 @@ public class VentasServiceImpl implements VentasService {
 
         Ventas venta = ventasMapper.toEntity(dto, usuario, empresa);
         venta.setFecha(LocalDateTime.now());
+        venta.setSubtotal(BigDecimal.ZERO);
+        venta.setDescuentoTotal(BigDecimal.ZERO);
         venta.setTotal(BigDecimal.ZERO);
         ventasRepository.save(venta);
 
-        BigDecimal totalVenta = BigDecimal.ZERO;
+        BigDecimal subtotalVenta = BigDecimal.ZERO;
 
         for (DetalleVentaRequestDto detalleDto : dto.getDetalles()) {
             Producto producto = productoRepository.findById(detalleDto.getProductoId())
@@ -118,9 +120,13 @@ public class VentasServiceImpl implements VentasService {
             producto.setCantidad(producto.getCantidad().subtract(detalleDto.getCantidad()));
             productoRepository.save(producto);
 
-            totalVenta = totalVenta.add(subtotal);
+            subtotalVenta = subtotalVenta.add(subtotal);
         }
 
+        BigDecimal descuentoTotal = normalizarDescuento(dto.getDescuentoTotal(), subtotalVenta);
+        BigDecimal totalVenta = subtotalVenta.subtract(descuentoTotal);
+        venta.setSubtotal(subtotalVenta);
+        venta.setDescuentoTotal(descuentoTotal);
         venta.setTotal(totalVenta);
         if (dto.getEfectivo() != null) {
             venta.setCambio(dto.getEfectivo().subtract(totalVenta));
@@ -177,7 +183,7 @@ public class VentasServiceImpl implements VentasService {
         detalleVentaRepository.deleteAll(detallesAntiguos);
 
         // Agregar nuevos detalles
-        BigDecimal totalVenta = BigDecimal.ZERO;
+        BigDecimal subtotalVenta = BigDecimal.ZERO;
         for (DetalleVentaRequestDto detalleDto : dto.getDetalles()) {
             Producto producto = productoRepository.findById(detalleDto.getProductoId())
                     .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
@@ -195,9 +201,13 @@ public class VentasServiceImpl implements VentasService {
             producto.setCantidad(producto.getCantidad().subtract(detalleDto.getCantidad()));
             productoRepository.save(producto);
 
-            totalVenta = totalVenta.add(subtotal);
+            subtotalVenta = subtotalVenta.add(subtotal);
         }
 
+        BigDecimal descuentoTotal = normalizarDescuento(dto.getDescuentoTotal(), subtotalVenta);
+        BigDecimal totalVenta = subtotalVenta.subtract(descuentoTotal);
+        venta.setSubtotal(subtotalVenta);
+        venta.setDescuentoTotal(descuentoTotal);
         venta.setTotal(totalVenta);
         if (dto.getEfectivo() != null) {
             venta.setCambio(dto.getEfectivo().subtract(totalVenta));
@@ -311,16 +321,18 @@ public byte[] generarFacturaPdf(Long id) {
         for (DetalleVentas d : venta.getDetalles()) {
             table.addCell(d.getProducto().getNombre());
             table.addCell(String.valueOf(d.getCantidad()));
-            table.addCell(formatoNumero.format(d.getProducto().getPrecio()));
+            table.addCell(formatoNumero.format(valorSeguro(d.getPrecio())));
             table.addCell(formatoNumero.format(d.getSubtotal()));
         }
 
         document.add(table);
 
         document.add(new Paragraph(" "));
-        document.add(new Paragraph("Total: " + formatoNumero.format(venta.getTotal()), empresaFont));
-        document.add(new Paragraph("Efectivo: " + formatoNumero.format(venta.getEfectivo())));
-        document.add(new Paragraph("Cambio: " + formatoNumero.format(venta.getCambio())));
+        document.add(new Paragraph("Subtotal: " + formatoNumero.format(valorSeguro(venta.getSubtotal())), normalFont));
+        document.add(new Paragraph("Descuento: " + formatoNumero.format(valorSeguro(venta.getDescuentoTotal())), normalFont));
+        document.add(new Paragraph("Total: " + formatoNumero.format(valorSeguro(venta.getTotal())), empresaFont));
+        document.add(new Paragraph("Efectivo: " + formatoNumero.format(valorSeguro(venta.getEfectivo()))));
+        document.add(new Paragraph("Cambio: " + formatoNumero.format(valorSeguro(venta.getCambio()))));
 
         document.close();
 
@@ -376,8 +388,8 @@ public byte[] generarFacturaPosPdf(Long id) {
             String nombreProducto = detalle.getProducto() != null
                     ? detalle.getProducto().getNombre()
                     : "Producto";
-            BigDecimal precioProducto = detalle.getProducto() != null
-                    ? detalle.getProducto().getPrecio()
+            BigDecimal precioProducto = detalle.getPrecio() != null
+                    ? detalle.getPrecio()
                     : BigDecimal.ZERO;
             String precio = "$" + formatoNumero.format(precioProducto);
             String subtotal = "$" + formatoNumero.format(detalle.getSubtotal());
@@ -391,9 +403,11 @@ public byte[] generarFacturaPosPdf(Long id) {
         }
 
         addLine(document, "--------------------------------", normalFont);
-        addLine(document, "TOTAL:   $" + formatoNumero.format(venta.getTotal()), boldFont);
-        addLine(document, "Efectivo: $" + formatoNumero.format(venta.getEfectivo()), normalFont);
-        addLine(document, "Cambio:  $" + formatoNumero.format(venta.getCambio()), normalFont);
+        addLine(document, "Subtotal: $" + formatoNumero.format(valorSeguro(venta.getSubtotal())), normalFont);
+        addLine(document, "Descuento:$" + formatoNumero.format(valorSeguro(venta.getDescuentoTotal())), normalFont);
+        addLine(document, "TOTAL:   $" + formatoNumero.format(valorSeguro(venta.getTotal())), boldFont);
+        addLine(document, "Efectivo: $" + formatoNumero.format(valorSeguro(venta.getEfectivo())), normalFont);
+        addLine(document, "Cambio:  $" + formatoNumero.format(valorSeguro(venta.getCambio())), normalFont);
         addLine(document, "--------------------------------", normalFont);
         addCentered(document, "Gracias por su compra", normalFont);
 
@@ -440,6 +454,25 @@ private String enmascararDocumento(String documento) {
     }
     String ultimosTres = documento.substring(documento.length() - 3);
     return "*******" + ultimosTres;
+}
+
+private BigDecimal normalizarDescuento(BigDecimal descuento, BigDecimal subtotal) {
+    BigDecimal descuentoSeguro = descuento != null ? descuento : BigDecimal.ZERO;
+    BigDecimal subtotalSeguro = subtotal != null ? subtotal : BigDecimal.ZERO;
+
+    if (descuentoSeguro.compareTo(BigDecimal.ZERO) < 0) {
+        throw new IllegalArgumentException("El descuento total no puede ser negativo");
+    }
+
+    if (descuentoSeguro.compareTo(subtotalSeguro) > 0) {
+        throw new IllegalArgumentException("El descuento total no puede superar el subtotal de la venta");
+    }
+
+    return descuentoSeguro;
+}
+
+private BigDecimal valorSeguro(BigDecimal valor) {
+    return valor != null ? valor : BigDecimal.ZERO;
 }
 
 
