@@ -136,10 +136,8 @@ public class CotizacionServiceImpl implements CotizacionService {
             String fechaFin,
             Long idCotizacion
     ) {
-        // Paginación con ordenamiento por fecha descendente (más recientes primero)
         Pageable pageable = PageRequest.of(page, size, Sort.by("idcotizacion").descending());
 
-        // Si se proporciona idCotizacion, priorizamos la búsqueda por ID
         if (idCotizacion != null) {
             if (usuarioId != null) {
                 return cotizacionRepository.findByIdAndEmpresaIdAndUsuarioId(idCotizacion, empresaId, usuarioId, pageable)
@@ -150,16 +148,14 @@ public class CotizacionServiceImpl implements CotizacionService {
             }
         }
 
-        // Convertir fechas de DD/MM/YYYY a LocalDateTime
         LocalDateTime dtFechaInicio = null;
         LocalDateTime dtFechaFin = null;
-
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         if (fechaInicio != null && !fechaInicio.trim().isEmpty()) {
             try {
                 LocalDate date = LocalDate.parse(fechaInicio, formatter);
-                dtFechaInicio = date.atStartOfDay(); // 00:00:00
+                dtFechaInicio = date.atStartOfDay();
             } catch (Exception e) {
                 throw new RuntimeException("Formato de fecha inicio inválido. Use DD/MM/YYYY");
             }
@@ -168,15 +164,13 @@ public class CotizacionServiceImpl implements CotizacionService {
         if (fechaFin != null && !fechaFin.trim().isEmpty()) {
             try {
                 LocalDate date = LocalDate.parse(fechaFin, formatter);
-                dtFechaFin = date.atTime(LocalTime.MAX); // 23:59:59
+                dtFechaFin = date.atTime(LocalTime.MAX);
             } catch (Exception e) {
                 throw new RuntimeException("Formato de fecha fin inválido. Use DD/MM/YYYY");
             }
         }
 
-        // Lógica condicional: combinar filtros según lo proporcionado
         Page<Cotizacion> cotizacionesPage;
-
         boolean tieneUsuario = usuarioId != null;
         boolean tieneCliente = nombreCliente != null && !nombreCliente.trim().isEmpty();
         boolean tieneFechas = dtFechaInicio != null && dtFechaFin != null;
@@ -206,7 +200,6 @@ public class CotizacionServiceImpl implements CotizacionService {
             cotizacionesPage = cotizacionRepository.findByEmpresaId(empresaId, pageable);
         }
 
-        // Convertir Page<Cotizacion> a Page<CotizacionResponseDto>
         return cotizacionesPage.map(cotizacionMapper::toDto);
     }
 
@@ -216,10 +209,7 @@ public class CotizacionServiceImpl implements CotizacionService {
             Cotizacion cotizacion = cotizacionRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Cotización no encontrada"));
 
-            // Obtener empresa desde usuario
             Empresa empresa = cotizacion.getUsuario().getEmpresa();
-
-            // Formato Colombia
             NumberFormat formatoNumero = NumberFormat.getInstance(new Locale("es", "CO"));
             formatoNumero.setMinimumFractionDigits(0);
             formatoNumero.setMaximumFractionDigits(0);
@@ -234,17 +224,9 @@ public class CotizacionServiceImpl implements CotizacionService {
             Font empresaFont = new Font(Font.HELVETICA, 14, Font.BOLD);
             Font normalFont = new Font(Font.HELVETICA, 12);
 
-            // ===============================
-            // 📋 INFORMACIÓN DE COTIZACIÓN
-            // ===============================
-
             document.add(new Paragraph("COTIZACIÓN", tituloFont));
             document.add(new Paragraph(" "));
             
-            // ===============================
-            // 🏢 INFORMACIÓN DE LA EMPRESA
-            // ===============================
-
             document.add(new Paragraph(empresa.getNombreEmpresa(), empresaFont));
             document.add(new Paragraph("NIT: " + empresa.getNit(), normalFont));
             document.add(new Paragraph("Dirección: " + empresa.getDireccion(), normalFont));
@@ -256,10 +238,6 @@ public class CotizacionServiceImpl implements CotizacionService {
             document.add(new Paragraph("Cliente: " + cotizacion.getNombreCliente(), normalFont));
             document.add(new Paragraph("Vendedor: " + cotizacion.getUsuario().getNombres(), normalFont));
             document.add(new Paragraph(" "));
-
-            // ===============================
-            // 📦 TABLA PRODUCTOS
-            // ===============================
 
             PdfPTable table = new PdfPTable(4);
             table.setWidthPercentage(100);
