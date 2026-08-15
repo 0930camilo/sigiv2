@@ -1,8 +1,11 @@
 package sigiv.Backend.sigiv.Backend.services.impl;
 
 import java.io.ByteArrayOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Properties;
 
@@ -15,6 +18,8 @@ import com.lowagie.text.Document;
 import com.lowagie.text.Element;
 import com.lowagie.text.Font;
 import com.lowagie.text.Paragraph;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -69,7 +74,7 @@ public class CotizacionEmailServiceImpl implements CotizacionEmailService {
             throw new IllegalArgumentException("La clave de aplicación de la empresa es obligatoria");
         }
 
-        byte[] pdf = generarCotizacionPosPdf(cotizacionId); // Llamada al método privado
+        byte[] pdf = generarCotizacionPosPdf(cotizacionId);
 
         enviarCorreo(cotizacion, empresa, configuracionCorreo, correoDestino.trim(), pdf);
     }
@@ -85,7 +90,7 @@ public class CotizacionEmailServiceImpl implements CotizacionEmailService {
             formatoNumero.setMaximumFractionDigits(0);
 
             int cantidadDetalles = cotizacion.getDetalles() != null ? cotizacion.getDetalles().size() : 0;
-            float altoPagina = Math.max(420f, 300f + (cantidadDetalles * 46f));
+            float altoPagina = Math.max(450f, 350f + (cantidadDetalles * 25f));
             com.lowagie.text.Rectangle pageSize = new com.lowagie.text.Rectangle(226.77f, altoPagina);
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -98,32 +103,76 @@ public class CotizacionEmailServiceImpl implements CotizacionEmailService {
             Font normalFont = new Font(Font.COURIER, 8, Font.NORMAL);
             Font boldFont = new Font(Font.COURIER, 8, Font.BOLD);
 
-            addCentered(document, safeText(empresa.getNombreEmpresa(), "SIGIV"), tituloFont);
-            addCentered(document, "COTIZACIÓN POS", boldFont);
-            addCentered(document, "No. " + cotizacion.getIdcotizacion(), normalFont);
-            addLine(document, "--------------------------------", normalFont);
-            addLine(document, "Fecha: " + safeText(cotizacion.getFecha(), "-"), normalFont);
-            addLine(document, "Cliente: " + safeText(cotizacion.getNombreCliente(), "Cliente"), normalFont);
-            addLine(document, "Vendedor: " + safeText(cotizacion.getUsuario().getNombres(), "-"), normalFont);
-            addLine(document, "--------------------------------", normalFont);
+            // Encabezado
+            addCentered(document, safeText(empresa.getNombreEmpresa(), "Mi Empresa"), tituloFont);
+            addCentered(document, "Cotizacion ", normalFont);
 
+            addCentered(document, "No." + cotizacion.getIdcotizacion(), normalFont);
+
+            addLine(document, "-------------------------------------------", normalFont);
+            // Bloque de Información
+            addLabelValueLine(document, "Fecha:", formatFecha(cotizacion.getFecha()), boldFont, normalFont);
+            addLabelValueLine(document, "Cliente:", safeText(cotizacion.getNombreCliente(), "-"), boldFont, normalFont);
+            addLabelValueLine(document, "Telefono:", safeText(cotizacion.getTelefonoCliente(), "-"), boldFont, normalFont);
+            addLabelValueLine(document, "Vendedor:", safeText(cotizacion.getUsuario().getNombres(), "-"), boldFont, normalFont);
+            
+            addLine(document, "-------------------------------------------", normalFont);
+
+            // Bloque de Items
             if (cotizacion.getDetalles() != null) {
                 for (DetalleCotizacion detalle : cotizacion.getDetalles()) {
                     String nombreProducto = detalle.getProducto() != null ? detalle.getProducto().getNombre() : "Producto";
                     BigDecimal precioProducto = detalle.getPrecio() != null ? detalle.getPrecio() : BigDecimal.ZERO;
                     BigDecimal subtotal = detalle.getSubtotal() != null ? detalle.getSubtotal() : BigDecimal.ZERO;
-                    String precio = "$" + formatoNumero.format(precioProducto);
-                    String subtotalTexto = "$" + formatoNumero.format(subtotal);
-                    addLine(document, limitar(nombreProducto, 32), boldFont);
-                    addLine(document, detalle.getCantidad() + " x " + precio + " = " + subtotalTexto, normalFont);
+                    
+                    Paragraph pNombre = new Paragraph(limitar(nombreProducto, 32), boldFont);
+                    pNombre.setSpacingAfter(2f);
+                    document.add(pNombre);
+
+                    PdfPTable itemTable = new PdfPTable(2);
+                    itemTable.setWidthPercentage(100);
+                    itemTable.setWidths(new float[]{60, 40});
+                    
+                    String qtyPrice = detalle.getCantidad() + " x $" + formatoNumero.format(precioProducto);
+                    PdfPCell leftCell = new PdfPCell(new Paragraph(qtyPrice, normalFont));
+                    leftCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+                    leftCell.setBorder(PdfPCell.NO_BORDER);
+
+                    String subtotalText = "$" + formatoNumero.format(subtotal);
+                    PdfPCell rightCell = new PdfPCell(new Paragraph(subtotalText, normalFont));
+                    rightCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                    rightCell.setBorder(PdfPCell.NO_BORDER);
+
+                    itemTable.addCell(leftCell);
+                    itemTable.addCell(rightCell);
+                    itemTable.setSpacingAfter(2f);
+                    document.add(itemTable);
                 }
             }
 
-            addLine(document, "--------------------------------", normalFont);
-            addLine(document, "TOTAL: $" + formatoNumero.format(valorSeguro(cotizacion.getTotal())), boldFont);
-            addLine(document, "--------------------------------", normalFont);
-            addCentered(document, "Cotización no reserva inventario", normalFont);
-            addCentered(document, "Gracias por su preferencia", normalFont);
+            addLine(document, "-------------------------------------------", normalFont);
+
+            // Bloque de Total
+            PdfPTable totalTable = new PdfPTable(2);
+            totalTable.setWidthPercentage(100);
+            totalTable.setWidths(new float[]{50, 50});
+            
+            PdfPCell totalLabel = new PdfPCell(new Paragraph("Total", boldFont));
+            totalLabel.setHorizontalAlignment(Element.ALIGN_LEFT);
+            totalLabel.setBorder(PdfPCell.NO_BORDER);
+
+            String totalValue = "$" + formatoNumero.format(valorSeguro(cotizacion.getTotal()));
+            PdfPCell totalVal = new PdfPCell(new Paragraph(totalValue, boldFont));
+            totalVal.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            totalVal.setBorder(PdfPCell.NO_BORDER);
+
+            totalTable.addCell(totalLabel);
+            totalTable.addCell(totalVal);
+            document.add(totalTable);
+
+            addLine(document, "-------------------------------------------", normalFont);
+            // Pie de página
+            addCentered(document, "Cotizacion sujeta a disponibilidad", normalFont);
 
             document.close();
             return out.toByteArray();
@@ -148,10 +197,8 @@ public class CotizacionEmailServiceImpl implements CotizacionEmailService {
             helper.addAttachment("cotizacion-pos-" + cotizacion.getIdcotizacion() + ".pdf", () -> new java.io.ByteArrayInputStream(pdf));
 
             mailSender.send(message);
-        } catch (MessagingException | MailException e) {
+        } catch (MessagingException | MailException | UnsupportedEncodingException e) {
             throw new RuntimeException("Error enviando la cotización por correo", e);
-        } catch (Exception e) {
-            throw new RuntimeException("Error inesperado enviando la cotización por correo", e);
         }
     }
 
@@ -180,18 +227,34 @@ public class CotizacionEmailServiceImpl implements CotizacionEmailService {
         return mailSender;
     }
 
-    // Métodos auxiliares para la generación de PDF
     private void addCentered(Document document, String text, Font font) throws Exception {
         Paragraph paragraph = new Paragraph(text, font);
         paragraph.setAlignment(Element.ALIGN_CENTER);
-        paragraph.setLeading(10f);
         document.add(paragraph);
     }
 
     private void addLine(Document document, String text, Font font) throws Exception {
         Paragraph paragraph = new Paragraph(text, font);
-        paragraph.setLeading(10f);
         document.add(paragraph);
+    }
+    
+    private void addLabelValueLine(Document document, String label, String value, Font labelFont, Font valueFont) throws Exception {
+        PdfPTable table = new PdfPTable(2);
+        table.setWidthPercentage(100);
+        table.setWidths(new float[]{40, 60});
+
+        PdfPCell leftCell = new PdfPCell(new Paragraph(label, labelFont));
+        leftCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+        leftCell.setBorder(PdfPCell.NO_BORDER);
+
+        PdfPCell rightCell = new PdfPCell(new Paragraph(value, valueFont));
+        rightCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        rightCell.setBorder(PdfPCell.NO_BORDER);
+
+        table.addCell(leftCell);
+        table.addCell(rightCell);
+        table.setSpacingAfter(0f);
+        document.add(table);
     }
 
     private String safeText(Object value, String fallback) {
@@ -210,5 +273,13 @@ public class CotizacionEmailServiceImpl implements CotizacionEmailService {
 
     private BigDecimal valorSeguro(BigDecimal valor) {
         return valor != null ? valor : BigDecimal.ZERO;
+    }
+    
+    private String formatFecha(LocalDateTime fecha) {
+        if (fecha == null) {
+            return "-";
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yy, h:mm a", new Locale("es", "CO"));
+        return fecha.format(formatter);
     }
 }
