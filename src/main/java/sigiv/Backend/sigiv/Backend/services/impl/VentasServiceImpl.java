@@ -70,6 +70,18 @@ public class VentasServiceImpl implements VentasService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         Empresa empresa = usuario.getEmpresa();
 
+        if (empresa == null) {
+            throw new IllegalArgumentException("El usuario no tiene empresa asociada");
+        }
+
+        if (dto.getEmpresaId() != null && !dto.getEmpresaId().equals(empresa.getIdEmpresa())) {
+            throw new IllegalArgumentException("El usuario no pertenece a la empresa del token");
+        }
+
+        if (dto.getDetalles() == null || dto.getDetalles().isEmpty()) {
+            throw new IllegalArgumentException("La venta debe incluir al menos un producto");
+        }
+
         Ventas venta = ventasMapper.toEntity(dto, usuario, empresa);
         venta.setFecha(LocalDateTime.now());
         venta.setTipoPago(resolverTipoPago(dto));

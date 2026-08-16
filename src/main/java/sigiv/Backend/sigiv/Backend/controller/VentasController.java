@@ -57,6 +57,14 @@ public class VentasController {
 
     @PostMapping("/crear-venta")
     public ResponseEntity<VentasResponseDto> crearVenta(@RequestBody VentasRequestDto dto, HttpServletRequest request) {
+        Long tokenEmpresaId = getEmpresaIdFromToken(request);
+        if (tokenEmpresaId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        // Si el frontend no envía empresaId, se toma del token para evitar rechazos por null.
+        if (dto.getEmpresaId() == null) {
+            dto.setEmpresaId(tokenEmpresaId);
+        }
+
         ResponseEntity<ApiResponse<?>> errorResponse = checkPermissions(dto.getEmpresaId(), request);
         if (errorResponse != null) return ResponseEntity.status(errorResponse.getStatusCode()).build();
         return ResponseEntity.ok(ventasService.crearVenta(dto));
