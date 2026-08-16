@@ -30,6 +30,8 @@ public class AbonoController {
         }
         String token = authHeader.substring(7);
         Claims claims = jwtUtil.extraerClaims(token);
+        Long empresaId = claims.get("empresa_id", Long.class);
+        if (empresaId != null) return empresaId;
         return claims.get("id", Long.class);
     }
 

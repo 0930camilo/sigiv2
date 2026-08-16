@@ -36,6 +36,9 @@ public class UsuarioController {
         }
         String token = authHeader.substring(7);
         Claims claims = jwtUtil.extraerClaims(token);
+        // Tokens de empresa traen "id", tokens de usuario traen "empresa_id"
+        Long empresaId = claims.get("empresa_id", Long.class);
+        if (empresaId != null) return empresaId;
         return claims.get("id", Long.class);
     }
 
