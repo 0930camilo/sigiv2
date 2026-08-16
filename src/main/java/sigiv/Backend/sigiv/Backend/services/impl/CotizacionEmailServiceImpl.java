@@ -108,6 +108,9 @@ public class CotizacionEmailServiceImpl implements CotizacionEmailService {
             addCentered(document, "Cotizacion ", normalFont);
 
             addCentered(document, "No." + cotizacion.getIdcotizacion(), normalFont);
+            addCentered(document, "NIT: " + safeText(empresa.getNit(), "-"), normalFont);
+            addCentered(document, "Direccion: " + safeText(empresa.getDireccion(), "-"), normalFont);
+            addCentered(document, "Telefono: " + safeText(empresa.getTelefono(), "-"), normalFont);
 
             addLine(document, "-------------------------------------------", normalFont);
             // Bloque de Información

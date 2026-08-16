@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import sigiv.Backend.sigiv.Backend.dto.detalleVenta.DetalleVentaResponseDto;
+import sigiv.Backend.sigiv.Backend.entity.Ventas.EstadoPago;
+import sigiv.Backend.sigiv.Backend.entity.Ventas.TipoPago;
 
 @Getter
 @Setter
@@ -25,8 +27,13 @@ public class VentasResponseDto {
     private BigDecimal subtotal;
     private BigDecimal descuentoTotal;
     private BigDecimal total;
+    private BigDecimal totalAbonado;
+    private BigDecimal saldoPendiente;
     private BigDecimal efectivo;
     private BigDecimal cambio;
     private String nombreUsuario;
+    private Long empresaId;
+    private TipoPago tipoPago;
+    private EstadoPago estadoPago;
     private List<DetalleVentaResponseDto> detalles;
 }

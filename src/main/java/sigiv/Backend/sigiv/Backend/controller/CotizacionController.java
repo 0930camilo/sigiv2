@@ -141,16 +141,16 @@ public class CotizacionController {
         );
     }
 
-    @GetMapping("/{id}/descargar")
-    public ResponseEntity<?> descargarCotizacion(@PathVariable Long id, HttpServletRequest request) {
+    @GetMapping("/{id}/descargar-pos")
+    public ResponseEntity<?> descargarCotizacionPos(@PathVariable Long id, HttpServletRequest request) {
         // CotizacionResponseDto cotizacion = cotizacionService.obtenerCotizacion(id);
         // ResponseEntity<ApiResponse> errorResponse = checkPermissions(cotizacion.getEmpresaId(), request);
         // if (errorResponse != null) return (ResponseEntity) errorResponse;
 
-        byte[] pdf = cotizacionService.generarCotizacionPdf(id);
+        byte[] pdf = cotizacionService.generarCotizacionPosPdf(id);
 
         return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=cotizacion-" + id + ".pdf")
+                .header("Content-Disposition", "attachment; filename=cotizacion-pos-" + id + ".pdf")
                 .header("Content-Type", "application/pdf")
                 .body(pdf);
     }

@@ -20,8 +20,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.lowagie.text.Document;
+import com.lowagie.text.Element;
 import com.lowagie.text.Font;
 import com.lowagie.text.Paragraph;
+import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 
@@ -266,5 +268,157 @@ public class CotizacionServiceImpl implements CotizacionService {
         } catch (Exception e) {
             throw new RuntimeException("Error generando cotización PDF", e);
         }
+    }
+
+    @Override
+    public byte[] generarCotizacionPosPdf(Long id) {
+        try {
+            Cotizacion cotizacion = cotizacionRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Cotización no encontrada"));
+
+            Empresa empresa = cotizacion.getUsuario().getEmpresa();
+            NumberFormat formatoNumero = NumberFormat.getInstance(new Locale("es", "CO"));
+            formatoNumero.setMinimumFractionDigits(0);
+            formatoNumero.setMaximumFractionDigits(0);
+
+            int cantidadDetalles = cotizacion.getDetalles() != null ? cotizacion.getDetalles().size() : 0;
+            float altoPagina = Math.max(450f, 350f + (cantidadDetalles * 25f));
+            com.lowagie.text.Rectangle pageSize = new com.lowagie.text.Rectangle(226.77f, altoPagina);
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            Document document = new Document(pageSize, 8f, 8f, 8f, 8f);
+            PdfWriter.getInstance(document, out);
+
+            document.open();
+
+            Font tituloFont = new Font(Font.COURIER, 10, Font.BOLD);
+            Font normalFont = new Font(Font.COURIER, 8, Font.NORMAL);
+            Font boldFont = new Font(Font.COURIER, 8, Font.BOLD);
+
+            addCentered(document, safeText(empresa.getNombreEmpresa(), "Mi Empresa"), tituloFont);
+            addCentered(document, "Cotizacion ", normalFont);
+            addCentered(document, "No." + cotizacion.getIdcotizacion(), normalFont);
+            addCentered(document, "NIT: " + safeText(empresa.getNit(), "-"), normalFont);
+            addCentered(document, "Direccion: " + safeText(empresa.getDireccion(), "-"), normalFont);
+            addCentered(document, "Telefono: " + safeText(empresa.getTelefono(), "-"), normalFont);
+
+            addLine(document, "-------------------------------------------", normalFont);
+            addLabelValueLine(document, "Fecha:", formatFecha(cotizacion.getFecha()), boldFont, normalFont);
+            addLabelValueLine(document, "Cliente:", safeText(cotizacion.getNombreCliente(), "-"), boldFont, normalFont);
+            addLabelValueLine(document, "Telefono:", safeText(cotizacion.getTelefonoCliente(), "-"), boldFont, normalFont);
+            addLabelValueLine(document, "Vendedor:", safeText(cotizacion.getUsuario().getNombres(), "-"), boldFont, normalFont);
+
+            addLine(document, "-------------------------------------------", normalFont);
+
+            if (cotizacion.getDetalles() != null) {
+                for (DetalleCotizacion detalle : cotizacion.getDetalles()) {
+                    String nombreProducto = detalle.getProducto() != null ? detalle.getProducto().getNombre() : "Producto";
+                    BigDecimal precioProducto = detalle.getPrecio() != null ? detalle.getPrecio() : BigDecimal.ZERO;
+                    BigDecimal subtotal = detalle.getSubtotal() != null ? detalle.getSubtotal() : BigDecimal.ZERO;
+
+                    Paragraph pNombre = new Paragraph(limitar(nombreProducto, 32), boldFont);
+                    pNombre.setSpacingAfter(2f);
+                    document.add(pNombre);
+
+                    PdfPTable itemTable = new PdfPTable(2);
+                    itemTable.setWidthPercentage(100);
+                    itemTable.setWidths(new float[]{60, 40});
+
+                    String qtyPrice = detalle.getCantidad() + " x $" + formatoNumero.format(precioProducto);
+                    PdfPCell leftCell = new PdfPCell(new Paragraph(qtyPrice, normalFont));
+                    leftCell.setHorizontalAlignment(com.lowagie.text.Element.ALIGN_LEFT);
+                    leftCell.setBorder(PdfPCell.NO_BORDER);
+
+                    String subtotalText = "$" + formatoNumero.format(subtotal);
+                    PdfPCell rightCell = new PdfPCell(new Paragraph(subtotalText, normalFont));
+                    rightCell.setHorizontalAlignment(com.lowagie.text.Element.ALIGN_RIGHT);
+                    rightCell.setBorder(PdfPCell.NO_BORDER);
+
+                    itemTable.addCell(leftCell);
+                    itemTable.addCell(rightCell);
+                    itemTable.setSpacingAfter(2f);
+                    document.add(itemTable);
+                }
+            }
+
+            addLine(document, "-------------------------------------------", normalFont);
+            PdfPTable totalTable = new PdfPTable(2);
+            totalTable.setWidthPercentage(100);
+            totalTable.setWidths(new float[]{50, 50});
+
+            PdfPCell totalLabel = new PdfPCell(new Paragraph("Total", boldFont));
+            totalLabel.setHorizontalAlignment(com.lowagie.text.Element.ALIGN_LEFT);
+            totalLabel.setBorder(PdfPCell.NO_BORDER);
+
+            String totalValue = "$" + formatoNumero.format(valorSeguro(cotizacion.getTotal()));
+            PdfPCell totalVal = new PdfPCell(new Paragraph(totalValue, boldFont));
+            totalVal.setHorizontalAlignment(com.lowagie.text.Element.ALIGN_RIGHT);
+            totalVal.setBorder(PdfPCell.NO_BORDER);
+
+            totalTable.addCell(totalLabel);
+            totalTable.addCell(totalVal);
+            document.add(totalTable);
+
+            addLine(document, "-------------------------------------------", normalFont);
+            addCentered(document, "Cotizacion sujeta a disponibilidad", normalFont);
+
+            document.close();
+            return out.toByteArray();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error generando cotización POS PDF", e);
+        }
+    }
+
+    private void addCentered(Document document, String text, Font font) throws Exception {
+        Paragraph paragraph = new Paragraph(text, font);
+        paragraph.setAlignment(Element.ALIGN_CENTER);
+        document.add(paragraph);
+    }
+
+    private void addLine(Document document, String text, Font font) throws Exception {
+        Paragraph paragraph = new Paragraph(text, font);
+        document.add(paragraph);
+    }
+
+    private void addLabelValueLine(Document document, String label, String value, Font labelFont, Font valueFont) throws Exception {
+        PdfPTable table = new PdfPTable(2);
+        table.setWidthPercentage(100);
+        table.setWidths(new float[]{40, 60});
+
+        PdfPCell leftCell = new PdfPCell(new Paragraph(label, labelFont));
+        leftCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+        leftCell.setBorder(PdfPCell.NO_BORDER);
+
+        PdfPCell rightCell = new PdfPCell(new Paragraph(value, valueFont));
+        rightCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        rightCell.setBorder(PdfPCell.NO_BORDER);
+
+        table.addCell(leftCell);
+        table.addCell(rightCell);
+        table.setSpacingAfter(0f);
+        document.add(table);
+    }
+
+    private String safeText(Object value, String fallback) {
+        if (value == null || String.valueOf(value).isBlank()) {
+            return fallback;
+        }
+        return String.valueOf(value);
+    }
+
+    private String limitar(String value, int maxLength) {
+        if (value == null) {
+            return "";
+        }
+        return value.length() <= maxLength ? value : value.substring(0, maxLength - 3) + "...";
+    }
+
+    private String formatFecha(LocalDateTime fecha) {
+        return fecha != null ? fecha.toString() : "-";
+    }
+
+    private BigDecimal valorSeguro(BigDecimal valor) {
+        return valor != null ? valor : BigDecimal.ZERO;
     }
 }

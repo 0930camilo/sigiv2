@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 
+import sigiv.Backend.sigiv.Backend.dto.abono.AbonoRequestDto;
+import sigiv.Backend.sigiv.Backend.dto.abono.AbonoResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.ventas.VentasRequestDto;
 import sigiv.Backend.sigiv.Backend.dto.ventas.VentasResponseDto;
 import sigiv.Backend.sigiv.Backend.dto.ventas.ResumenVendedorDto;
@@ -20,7 +22,6 @@ public interface VentasService {
 
     void eliminarVenta(Long id);
 
-    // ✅ Page CORRECTO (Spring)
     Page<VentasResponseDto> listarVentasPorEmpresaPaginado(
             Long empresaId,
             int page,
@@ -30,18 +31,16 @@ public interface VentasService {
             String cliente
     );
 
-       // ✅ AGREGA ESTO
     byte[] generarFacturaPdf(Long id);
 
     byte[] generarFacturaPosPdf(Long id);
-
 
     Page<VentasResponseDto> buscarVentaPorIdYEmpresa(
         Long empresaId,
         Long idVenta,
         int page,
         int size
-);
+    );
 
     List<ResumenVendedorDto> resumenVentasPorUsuario(
         Long empresaId,
@@ -65,4 +64,7 @@ public interface VentasService {
             int size
     );
 
+    // Métodos para Abonos
+    AbonoResponseDto registrarAbono(Long ventaId, AbonoRequestDto abonoDto);
+    List<AbonoResponseDto> getAbonosByVentaId(Long ventaId);
 }

@@ -2,25 +2,25 @@ package sigiv.Backend.sigiv.Backend.dto.ventas;
 
 import java.math.BigDecimal;
 import java.util.List;
-
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import sigiv.Backend.sigiv.Backend.dto.detalleVenta.DetalleVentaRequestDto;
+import sigiv.Backend.sigiv.Backend.entity.Abono.MetodoPago;
+import sigiv.Backend.sigiv.Backend.entity.Ventas.TipoPago;
+import lombok.Data;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Data
 public class VentasRequestDto {
-    private Long empresaId;
     private Long usuarioId;
+    private Long empresaId;
     private String nombreCliente;
     private String telefonoCliente;
     private String correoCliente;
     private String documentoCliente;
-    private BigDecimal efectivo;
     private BigDecimal descuentoTotal;
+    private BigDecimal efectivo;
     private List<DetalleVentaRequestDto> detalles;
+
+    // Campos para Crédito
+    private TipoPago tipoPago;
+    private BigDecimal abonoInicial;
+    private MetodoPago metodoPagoAbonoInicial;
 }

@@ -10,7 +10,7 @@ import lombok.Data;
 
 @Entity
 @Data
-@Table(name = "usuario")  // Por convención, nombres de tablas en minúscula
+@Table(name = "usuario")
 public class Usuario {
 
     @Id
@@ -24,29 +24,25 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     private Estado estado;
 
-
-     // Enum declarado fuera de los atributos
     public enum Estado {
         Activo,
         Inactivo
     }
 
-      @ManyToOne
+    @ManyToOne
     @JoinColumn(name = "empresa_id")
     @JsonBackReference("empresa-usuarios")
     private Empresa empresa;
 
-    
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("usuario-cotizacion")
+    private List<Cotizacion> cotizaciones;
 
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("usuario-ventas")
+    private List<Ventas> ventas;
 
-@OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-@JsonManagedReference("usuario-cotizacion")
-private List<Cotizacion> cotizaciones;
-
-
-
-@OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-@JsonManagedReference("usuario-ventas")
-private List<Ventas> ventas;
-
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("usuario-abonos")
+    private List<Abono> abonos;
 }
