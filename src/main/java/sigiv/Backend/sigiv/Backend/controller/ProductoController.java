@@ -37,6 +37,8 @@ public class ProductoController {
         }
         String token = authHeader.substring(7);
         Claims claims = jwtUtil.extraerClaims(token);
+        Long empresaId = claims.get("empresa_id", Long.class);
+        if (empresaId != null) return empresaId;
         return claims.get("id", Long.class);
     }
 
@@ -181,8 +183,13 @@ public class ProductoController {
 
     @PostMapping("/importar-excel")
     public ResponseEntity<ApiResponse<ProductoImportResultDto>> importarDesdeExcel(
-            @RequestParam("archivo") MultipartFile archivo) {
+            @RequestParam("archivo") MultipartFile archivo,
+            @RequestParam Long empresaId,
+            HttpServletRequest request) {
         try {
+            ResponseEntity<ApiResponse> errorResponse = checkPermissions(empresaId, request);
+            if (errorResponse != null) return (ResponseEntity) errorResponse;
+
             if (archivo.isEmpty()) {
                 return ResponseEntity.badRequest().body(
                         new ApiResponse<>(false, HttpStatus.BAD_REQUEST.value(), "El archivo está vacío", null));

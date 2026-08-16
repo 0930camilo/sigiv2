@@ -23,6 +23,7 @@ public class CotizacionResponseDto {
     private BigDecimal total;
 
     private String nombreUsuario;
+    private Long empresaId;
 
     private List<DetalleCotizacionResponseDto> detalles;
 }

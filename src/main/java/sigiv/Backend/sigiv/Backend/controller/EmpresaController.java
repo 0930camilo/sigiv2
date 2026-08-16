@@ -35,6 +35,18 @@ public class EmpresaController<empresaService> {
     private final CorreoEmpresaService correoEmpresaService;
     private final JwtUtil jwtUtil;
 
+    private Long getEmpresaIdFromToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return null;
+        }
+        String token = authHeader.substring(7);
+        Claims claims = jwtUtil.extraerClaims(token);
+        Long tokenEmpresaId = claims.get("empresa_id", Long.class);
+        if (tokenEmpresaId != null) return tokenEmpresaId;
+        return claims.get("id", Long.class);
+    }
+
     // Helper method to check permissions
     private ResponseEntity<ApiResponse> checkPermissions(Long resourceId, HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
@@ -45,8 +57,9 @@ public class EmpresaController<empresaService> {
         }
         String token = authHeader.substring(7);
         Claims claims = jwtUtil.extraerClaims(token);
-        Long authenticatedUserId = claims.get("id", Long.class);
-        if (!authenticatedUserId.equals(resourceId)) {
+        Long tokenEmpresaId = claims.get("empresa_id", Long.class);
+        if (tokenEmpresaId == null) tokenEmpresaId = claims.get("id", Long.class);
+        if (!tokenEmpresaId.equals(resourceId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
                     new ApiResponse<>(false, HttpStatus.FORBIDDEN.value(), "No tienes permiso para acceder a esta información", null)
             );
@@ -55,7 +68,9 @@ public class EmpresaController<empresaService> {
     }
 
     @PostMapping("/crear-empresa")
-    public ResponseEntity<ApiResponse<EmpresaResponseDto>> crear(@RequestBody EmpresaRequestDto dto) {
+    public ResponseEntity<ApiResponse<EmpresaResponseDto>> crear(@RequestBody EmpresaRequestDto dto, HttpServletRequest request) {
+        ResponseEntity<ApiResponse> errorResponse = checkPermissions(dto.getId_Empresa(), request);
+        if (errorResponse != null) return (ResponseEntity) errorResponse;
         EmpresaResponseDto created = empresaService.crearEmpresa(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new ApiResponse<>(true, HttpStatus.CREATED.value(), "Empresa creada correctamente", created)
@@ -74,8 +89,12 @@ public class EmpresaController<empresaService> {
     }
 
     @GetMapping("/list-empresas")
-    public ResponseEntity<ApiResponse<List<EmpresaResponseDto>>> listar() {
-        List<EmpresaResponseDto> empresas = empresaService.listarEmpresas();
+    public ResponseEntity<ApiResponse<List<EmpresaResponseDto>>> listar(HttpServletRequest request) {
+        Long empresaId = getEmpresaIdFromToken(request);
+        if (empresaId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse<>(false, HttpStatus.UNAUTHORIZED.value(), "Token no proporcionado o inválido", null));
+        }
+        List<EmpresaResponseDto> empresas = List.of(empresaService.obtenerPorId(empresaId));
         return ResponseEntity.ok(
                 new ApiResponse<>(true, HttpStatus.OK.value(), "Todas las empresas listadas", empresas)
         );
@@ -83,16 +102,14 @@ public class EmpresaController<empresaService> {
 
     @GetMapping("/list-empresas-status")
     public ResponseEntity<ApiResponse<List<EmpresaResponseDto>>> listarPorEstado(
-            @RequestParam(required = false) Empresa.Estado estado) {
-        List<EmpresaResponseDto> empresas;
-        String message;
-        if (estado != null) {
-            empresas = empresaService.listarPorEstado(estado);
-            message = "Empresas listadas por estado: " + estado;
-        } else {
-            empresas = empresaService.listarEmpresas();
-            message = "Todas las empresas listadas";
+            @RequestParam(required = false) Empresa.Estado estado,
+            HttpServletRequest request) {
+        Long empresaId = getEmpresaIdFromToken(request);
+        if (empresaId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse<>(false, HttpStatus.UNAUTHORIZED.value(), "Token no proporcionado o inválido", null));
         }
+        List<EmpresaResponseDto> empresas = List.of(empresaService.obtenerPorId(empresaId));
+        String message = estado != null ? "Empresas listadas por estado: " + estado : "Todas las empresas listadas";
         return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.OK.value(), message, empresas));
     }
 

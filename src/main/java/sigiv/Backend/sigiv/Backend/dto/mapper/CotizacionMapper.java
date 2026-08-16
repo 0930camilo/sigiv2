@@ -36,6 +36,7 @@ public class CotizacionMapper {
 
         if (cot.getUsuario() != null) {
             dto.setNombreUsuario(cot.getUsuario().getNombres());
+            dto.setEmpresaId(cot.getUsuario().getEmpresa() != null ? cot.getUsuario().getEmpresa().getIdEmpresa() : null);
         }
 
         // 🔥 PROTEGIDO CONTRA NULL
