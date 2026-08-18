@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
@@ -39,6 +40,8 @@ import sigiv.Backend.sigiv.Backend.services.CotizacionService;
 @Service
 public class CotizacionServiceImpl implements CotizacionService {
 
+    private static final ZoneId BOGOTA_ZONE = ZoneId.of("America/Bogota");
+
     @Autowired
     private CotizacionRepository cotizacionRepository;
 
@@ -69,7 +72,7 @@ public class CotizacionServiceImpl implements CotizacionService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         Cotizacion cot = cotizacionMapper.toEntity(dto, usuario);
-        cot.setFecha(LocalDateTime.now());
+        cot.setFecha(LocalDateTime.now(BOGOTA_ZONE));
         cot.setTotal(BigDecimal.ZERO);
 
         cotizacionRepository.save(cot);
