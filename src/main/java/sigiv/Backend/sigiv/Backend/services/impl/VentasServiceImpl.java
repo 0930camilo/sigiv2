@@ -3,6 +3,7 @@ package sigiv.Backend.sigiv.Backend.services.impl;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -46,6 +47,8 @@ import org.springframework.data.domain.Pageable;
 @Service
 public class VentasServiceImpl implements VentasService {
 
+    private static final ZoneId BOGOTA_ZONE = ZoneId.of("America/Bogota");
+
     @Autowired
     private VentasRepository ventasRepository;
     @Autowired
@@ -83,7 +86,7 @@ public class VentasServiceImpl implements VentasService {
         }
 
         Ventas venta = ventasMapper.toEntity(dto, usuario, empresa);
-        venta.setFecha(LocalDateTime.now());
+        venta.setFecha(LocalDateTime.now(BOGOTA_ZONE));
         venta.setTipoPago(resolverTipoPago(dto));
 
         BigDecimal subtotalVenta = BigDecimal.ZERO;
@@ -122,7 +125,7 @@ public class VentasServiceImpl implements VentasService {
                 abono.setVenta(venta);
                 abono.setUsuario(usuario);
                 abono.setValor(abonoInicial);
-                abono.setFecha(LocalDateTime.now());
+                abono.setFecha(LocalDateTime.now(BOGOTA_ZONE));
                 abono.setMetodoPago(dto.getMetodoPagoAbonoInicial() != null ? dto.getMetodoPagoAbonoInicial() : Abono.MetodoPago.EFECTIVO);
                 abono.setObservacion("Abono inicial de la venta");
                 venta.getAbonos().add(abono);
@@ -165,7 +168,7 @@ public class VentasServiceImpl implements VentasService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado para registrar el abono"));
 
         Abono abono = abonoMapper.toEntity(abonoDto, venta, usuario);
-        abono.setFecha(LocalDateTime.now());
+        abono.setFecha(LocalDateTime.now(BOGOTA_ZONE));
         
         abonoRepository.save(abono);
 
