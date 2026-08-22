@@ -352,7 +352,12 @@ public class VentasServiceImpl implements VentasService {
                     .map(abono -> abono.getValor() != null ? abono.getValor() : BigDecimal.ZERO)
                     .reduce(BigDecimal.ZERO, BigDecimal::add)
                     : BigDecimal.ZERO;
-            BigDecimal saldoPendiente = total.subtract(totalAbonado);
+            BigDecimal saldoPendiente;
+            if (venta.getTipoPago() == TipoPago.CONTADO && venta.getEstadoPago() == EstadoPago.PAGADA) {
+                saldoPendiente = BigDecimal.ZERO;
+            } else {
+                saldoPendiente = total.subtract(totalAbonado);
+            }
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             Document document = formatoPos
