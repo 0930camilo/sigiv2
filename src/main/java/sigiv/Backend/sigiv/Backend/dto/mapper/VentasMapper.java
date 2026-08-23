@@ -13,6 +13,8 @@ import sigiv.Backend.sigiv.Backend.dto.ventas.VentasRequestDto;
 import sigiv.Backend.sigiv.Backend.entity.Empresa;
 import sigiv.Backend.sigiv.Backend.entity.Usuario;
 import sigiv.Backend.sigiv.Backend.entity.Ventas;
+import sigiv.Backend.sigiv.Backend.entity.Ventas.TipoPago;
+import sigiv.Backend.sigiv.Backend.entity.Ventas.EstadoPago;
 
 @Component
 public class VentasMapper {
