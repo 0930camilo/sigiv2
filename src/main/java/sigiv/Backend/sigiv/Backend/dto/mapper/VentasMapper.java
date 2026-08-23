@@ -47,13 +47,22 @@ public class VentasMapper {
                 .map(abono -> abono.getValor() != null ? abono.getValor() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 : BigDecimal.ZERO;
+
         BigDecimal totalSeguro = entity.getTotal() != null ? entity.getTotal() : BigDecimal.ZERO;
-        BigDecimal saldoPendiente = totalSeguro.subtract(totalAbonado);
+// ✅ Ajuste: si es CONTADO y está PAGADA, saldo = 0
+        BigDecimal saldoPendiente;
+        if (entity.getTipoPago() == TipoPago.CONTADO && entity.getEstadoPago() == EstadoPago.PAGADA) {
+            saldoPendiente = BigDecimal.ZERO;
+        } else {
+            saldoPendiente = totalSeguro.subtract(totalAbonado);
+        }
+
+
 
         List<DetalleVentaResponseDto> detalles = entity.getDetalles() != null
                 ? entity.getDetalles().stream()
-                        .map(detalleMapper::toDto)
-                        .collect(Collectors.toList())
+                .map(detalleMapper::toDto)
+                .collect(Collectors.toList())
                 : null;
 
         return new VentasResponseDto(
@@ -71,7 +80,7 @@ public class VentasMapper {
                 entity.getEfectivo(),
                 entity.getCambio(),
                 entity.getUsuario() != null ? entity.getUsuario().getNombres() : null,
-                entity.getEmpresa() != null ? entity.getEmpresa().getIdEmpresa() : null, // Asignar empresaId
+                entity.getEmpresa() != null ? entity.getEmpresa().getIdEmpresa() : null,
                 entity.getTipoPago(),
                 entity.getEstadoPago(),
                 detalles
