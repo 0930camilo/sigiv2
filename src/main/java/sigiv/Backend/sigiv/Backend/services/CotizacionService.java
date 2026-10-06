@@ -29,4 +29,7 @@ public interface CotizacionService {
     
     // Método para generar cotización en PDF
     byte[] generarCotizacionPdf(Long id);
+
+    // Método para generar cotización POS en PDF
+    byte[] generarCotizacionPosPdf(Long id);
 }
