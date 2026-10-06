@@ -2,6 +2,7 @@ package sigiv.Backend.sigiv.Backend.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -26,7 +27,7 @@ public class Devolucion {
     private Producto producto;
 
     @Column(nullable = false)
-    private Integer cantidad;
+    private BigDecimal cantidad;
 
     @Column(columnDefinition = "TEXT")
     private String motivo;

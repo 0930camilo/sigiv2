@@ -25,20 +25,27 @@ public class Producto {
 
     private String nombre;
     private String descripcion;
-    private Integer cantidad;
+    private BigDecimal cantidad;
     private BigDecimal precioCompra;
     private BigDecimal precio;
     private LocalDateTime fecha;
+
+    @Enumerated(EnumType.STRING)
+    private UnidadMedida unidadMedida;
 
     @Column(name = "codigo_barra", unique = true, length = 64)
     private String codigoBarra;
 
     @Enumerated(EnumType.STRING)
-private Estado estado;
+    private Estado estado;
 
-public enum Estado {
-    Activo, Inactivo
-}
+    public enum Estado {
+        Activo, Inactivo
+    }
+
+    public enum UnidadMedida {
+        KG, GRAMOS, UNIDAD, LITRO, METRO
+    }
 
 
 

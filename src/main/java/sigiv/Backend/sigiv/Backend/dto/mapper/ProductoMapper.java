@@ -20,6 +20,7 @@ public class ProductoMapper {
             p.getFecha(),
             p.getCodigoBarra(),
             p.getEstado(),
+            p.getUnidadMedida(),
         // proveedor
         p.getProveedor() != null ? p.getProveedor().getIdproveedor() : null,
         p.getProveedor() != null ? p.getProveedor().getNombre() : null,
@@ -48,6 +49,7 @@ public class ProductoMapper {
         if (dto.getFecha() != null) entity.setFecha(dto.getFecha());
         if (dto.getCodigoBarra() != null) entity.setCodigoBarra(dto.getCodigoBarra());
         if (dto.getEstado() != null) entity.setEstado(dto.getEstado());
+        if (dto.getUnidadMedida() != null) entity.setUnidadMedida(dto.getUnidadMedida());
         if (proveedor != null) entity.setProveedor(proveedor);
         if (categoria != null) entity.setCategoria(categoria);
     }

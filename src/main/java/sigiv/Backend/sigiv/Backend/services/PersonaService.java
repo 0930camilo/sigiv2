@@ -18,6 +18,7 @@ public interface PersonaService {
     List<PersonaResponseDto> listarPorEmpresa(Long empresaId);
     Page<PersonaResponseDto> listarPorEmpresaPaginado(Long empresaId, int page, int size);
     Page<PersonaResponseDto> filtrarPorEmpresa(Long empresaId, Persona.Estado estado, String documento, String nombre, int page, int size);
+    Page<PersonaResponseDto> filtrarPorEmpresaExacto(Long empresaId, Persona.Estado estado, String documento, String nombre, int page, int size);
     void eliminarPersona(Long id);
     PersonaResponseDto cambiarEstado(Long id);
 }

@@ -45,32 +45,29 @@ public class DevolucionServiceImpl implements DevolucionService {
                 .orElseThrow(() -> new RuntimeException("El producto no pertenece a esta venta."));
 
         // 3️⃣ Validar cantidad
-        if (dto.getCantidad() == null || dto.getCantidad() <= 0) {
+        if (dto.getCantidad() == null || dto.getCantidad().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("La cantidad devuelta debe ser mayor que 0");
         }
 
-        if (dto.getCantidad() > detalle.getCantidad()) {
+        if (dto.getCantidad().compareTo(detalle.getCantidad()) > 0) {
             throw new IllegalArgumentException("No puedes devolver más de lo vendido");
         }
 
         // 4️⃣ Reintegrar al inventario
-        producto.setCantidad(producto.getCantidad() + dto.getCantidad());
+        producto.setCantidad(producto.getCantidad().add(dto.getCantidad()));
         productoRepository.save(producto);
 
         // 5️⃣ Actualizar detalle de venta
-        detalle.setCantidad(detalle.getCantidad() - dto.getCantidad());
-        detalle.setSubtotal(detalle.getPrecio().multiply(BigDecimal.valueOf(detalle.getCantidad())));
+        detalle.setCantidad(detalle.getCantidad().subtract(dto.getCantidad()));
+        detalle.setSubtotal(detalle.getPrecio().multiply(detalle.getCantidad()));
         detalleVentaRepository.save(detalle);
 
         // 6️⃣ Recalcular total de la venta
-        BigDecimal nuevoTotal = detalleVentaRepository.findByVentaIdventa(venta.getIdventa()).stream()
+        BigDecimal nuevoSubtotal = detalleVentaRepository.findByVentaIdventa(venta.getIdventa()).stream()
                 .map(d -> d.getSubtotal() != null ? d.getSubtotal() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        venta.setTotal(nuevoTotal);
-        if (venta.getEfectivo() != null) {
-            venta.setCambio(venta.getEfectivo().subtract(nuevoTotal));
-        }
+        actualizarTotalesVenta(venta, nuevoSubtotal);
         ventasRepository.save(venta);
 
         // 7️⃣ Registrar devolución
@@ -140,5 +137,23 @@ public class DevolucionServiceImpl implements DevolucionService {
         dto.setMotivo(dev.getMotivo());
         dto.setFecha(dev.getFecha());
         return dto;
+    }
+
+    private void actualizarTotalesVenta(Ventas venta, BigDecimal subtotal) {
+        BigDecimal subtotalSeguro = subtotal != null ? subtotal : BigDecimal.ZERO;
+        BigDecimal descuento = venta.getDescuentoTotal() != null ? venta.getDescuentoTotal() : BigDecimal.ZERO;
+
+        if (descuento.compareTo(subtotalSeguro) > 0) {
+            descuento = subtotalSeguro;
+        }
+
+        BigDecimal total = subtotalSeguro.subtract(descuento);
+        venta.setSubtotal(subtotalSeguro);
+        venta.setDescuentoTotal(descuento);
+        venta.setTotal(total);
+
+        if (venta.getEfectivo() != null) {
+            venta.setCambio(venta.getEfectivo().subtract(total));
+        }
     }
 }

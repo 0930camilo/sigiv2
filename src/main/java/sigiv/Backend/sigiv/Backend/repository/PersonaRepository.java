@@ -11,10 +11,13 @@ import org.springframework.data.repository.query.Param;
 import sigiv.Backend.sigiv.Backend.entity.Persona;
 
 public interface PersonaRepository extends JpaRepository<Persona, Long> {
-    
+
     List<Persona> findByEstado(Persona.Estado estado);
+
     List<Persona> findByEmpresaIdEmpresa(Long empresaId);
+
     Page<Persona> findByEmpresaIdEmpresa(Long empresaId, Pageable pageable);
+
     List<Persona> findByEmpresaIdEmpresaAndEstado(Long empresaId, Persona.Estado estado);
 
     @Query("""
@@ -25,10 +28,32 @@ public interface PersonaRepository extends JpaRepository<Persona, Long> {
         AND (:nombre IS NULL OR p.nombre LIKE CONCAT('%', :nombre, '%'))
     """)
     Page<Persona> filtrarPorEmpresa(
-        @Param("empresaId") Long empresaId,
-        @Param("estado") Persona.Estado estado,
-        @Param("documento") String documento,
-        @Param("nombre") String nombre,
-        Pageable pageable
+            @Param("empresaId") Long empresaId,
+            @Param("estado") Persona.Estado estado,
+            @Param("documento") String documento,
+            @Param("nombre") String nombre,
+            Pageable pageable
+    );
+
+    @Query("""
+        SELECT p FROM Persona p
+        WHERE p.empresa.idEmpresa = :empresaId
+        AND (:estado IS NULL OR p.estado = :estado)
+        AND (:documento IS NULL OR p.documento = :documento)
+        AND (:nombre IS NULL OR p.nombre LIKE CONCAT('%', :nombre, '%'))
+    """)
+    Page<Persona> filtrarPorEmpresaExacto(
+            @Param("empresaId") Long empresaId,
+            @Param("estado") Persona.Estado estado,
+            @Param("documento") String documento,
+            @Param("nombre") String nombre,
+            Pageable pageable
+    );
+    boolean existsByEmpresaIdEmpresaAndDocumento(Long empresaId, String documento);
+
+    boolean existsByEmpresaIdEmpresaAndDocumentoAndIdpersonaNot(
+            Long empresaId,
+            String documento,
+            Long idpersona
     );
 }

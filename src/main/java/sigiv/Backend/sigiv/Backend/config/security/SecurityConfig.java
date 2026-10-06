@@ -40,6 +40,7 @@ public class SecurityConfig {
                         // ✅ ENDPOINTS PUBLICOS
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/empresas/crear-empresa").permitAll()
+                        .requestMatchers("/api/test/email/**").permitAll()
 
                         // 🔒 TODO LO DEMÁS REQUIERE TOKEN
                         .anyRequest().authenticated()

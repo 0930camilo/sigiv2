@@ -2,6 +2,7 @@ package sigiv.Backend.sigiv.Backend.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -20,6 +21,8 @@ public class Ventas {
     private Long idventa;
 
     private LocalDateTime fecha;
+    private BigDecimal subtotal;
+    private BigDecimal descuentoTotal;
     private BigDecimal total;
     private String nombreCliente;
     private String telefonoCliente;
@@ -27,6 +30,14 @@ public class Ventas {
     private String documentoCliente;
     private BigDecimal efectivo;
     private BigDecimal cambio;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(255) default 'CONTADO'")
+    private TipoPago tipoPago;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(255) default 'PAGADA'")
+    private EstadoPago estadoPago;
 
     @ManyToOne
     @JoinColumn(name = "usuario_idusuario")
@@ -41,4 +52,18 @@ public class Ventas {
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<DetalleVentas> detalles;
+
+    @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("venta-abonos")
+    private List<Abono> abonos = new ArrayList<>();
+
+    public enum TipoPago {
+        CONTADO,
+        CREDITO
+    }
+
+    public enum EstadoPago {
+        PAGADA,
+        PENDIENTE
+    }
 }
